@@ -27,7 +27,8 @@ import {
   X
 } from 'lucide-react';
 import logo from '../../assets/rescueGH-Logo.png';
-
+import kenteBg from '../../assets/kente.jpg';
+import MainLayout from '../../Layouts/MainLayout.jsx';
 
 const EmergencyHomePage = () => {
   const [locationStatus, setLocationStatus] = useState('active');
@@ -199,9 +200,10 @@ const EmergencyHomePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <MainLayout>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 bg-opacity-80 backdrop-blur-sm p-6">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
@@ -433,6 +435,7 @@ const EmergencyHomePage = () => {
         </div>
       </div>
     </div>
+     </MainLayout>
   );
 };
 

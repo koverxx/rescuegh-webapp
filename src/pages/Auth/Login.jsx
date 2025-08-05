@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import logo from '../../assets/rescueGH-Logo.png'; 
+import MainLayout from '../../Layouts/MainLayout';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,7 +22,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <MainLayout>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {/* Header */}
@@ -145,5 +147,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </MainLayout>
   );
 }
