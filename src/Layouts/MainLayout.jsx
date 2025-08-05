@@ -6,7 +6,7 @@ const MainLayout = ({ children }) => {
   return (
     <div
       className="min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: `url(${kenteBg})` }}
+      style={{ backgroundImage: `url(/assets/kente.jpg)` }}
     >
       {/* Overlay for readability */}
       <div className="min-h-screen bg-white bg-opacity-90 backdrop-blur-sm">
