@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Clock, AlertTriangle, CheckCircle, XCircle, Filter, Search } from 'lucide-react';
+import MainLayout from '../../Layouts/MainLayout';
 
 const EmergencyHistory = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -132,11 +133,12 @@ const EmergencyHistory = () => {
   const emergencyTypes = [...new Set(emergencies.map(e => e.type))];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <MainLayout>
+    <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Emergency History</h1>
+          <h1 className="text-6xl font-bold text-gray-900 mb-2">Emergency History</h1>
           <p className="text-gray-600">Track and review past emergency incidents and responses</p>
         </div>
 
@@ -282,6 +284,7 @@ const EmergencyHistory = () => {
         </div>
       </div>
     </div>
+    </MainLayout>
   );
 };
 

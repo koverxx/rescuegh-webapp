@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, User, Lock, Phone, CheckCircle, AlertCircle } from 'lucide-react';
 import logo from '../../assets/rescueGH-Logo.png';
+import MainLayout from '../../Layouts/MainLayout';
 
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
@@ -112,7 +113,8 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <MainLayout>
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="flex justify-center mb-6">
@@ -388,6 +390,7 @@ const SignUpPage = () => {
         </div>
       </div>
     </div>
+    </MainLayout>
   );
 };
 

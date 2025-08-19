@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, Phone, Heart, MapPin, Bell, Shield, Edit3, Save, X, Plus, AlertTriangle } from 'lucide-react';
+import MainLayout from '../../Layouts/MainLayout';
 
 export default function UserProfile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -55,7 +56,8 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-4">
+    <MainLayout>
+    <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
@@ -313,5 +315,6 @@ export default function UserProfile() {
         </div>
       </div>
     </div>
+    </MainLayout>
   );
 }

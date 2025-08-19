@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import MainLayout from '../../Layouts/MainLayout';
 import { 
   MapPin, 
   Navigation, 
@@ -276,13 +277,14 @@ const RespondersNearby = () => {
   const busyCount = responders.filter(r => r.status === 'busy').length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <MainLayout>
+    <div className="min-h-screen">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <h1 className="text-5xl font-bold text-gray-900 flex items-center gap-2">
                 <Navigation className="h-6 w-6 text-blue-500" />
                 Responders Nearby
               </h1>
@@ -533,6 +535,7 @@ const RespondersNearby = () => {
         )}
       </div>
     </div>
+    </MainLayout>
   );
 };
 

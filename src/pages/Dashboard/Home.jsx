@@ -27,7 +27,7 @@ import {
   X
 } from 'lucide-react';
 import logo from '../../assets/rescueGH-Logo.png';
-import kenteBg from '../../assets/kente.jpg';
+import kenteBg from '../../assets/kente.png';
 import MainLayout from '../../Layouts/MainLayout.jsx';
 
 const EmergencyHomePage = () => {
@@ -38,7 +38,7 @@ const EmergencyHomePage = () => {
     {
       id: 1,
       type: 'weather',
-      title: 'Heavy Rain Alert',
+      title: '🌧 Ghana Meteorological Agency (GMet) flood/rain alerts',
       message: 'Flood warning in your area until 6 PM',
       severity: 'medium',
       time: '2 hours ago'
@@ -106,8 +106,8 @@ const EmergencyHomePage = () => {
   // Quick actions
   const quickActions = [
     {
-      id: 'call-911',
-      name: 'Call 911',
+      id: 'call-112',
+      name: 'Call 112',
       icon: Phone,
       color: 'bg-red-600',
       action: () => handleQuickCall('911')
@@ -201,7 +201,7 @@ const EmergencyHomePage = () => {
 
   return (
     <MainLayout>
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 bg-opacity-80 backdrop-blur-sm p-6">
+    {/* <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 bg-opacity-80 backdrop-blur-sm p-6"> */}
       {/* Header */}
       <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -434,7 +434,7 @@ const EmergencyHomePage = () => {
           </div>
         </div>
       </div>
-    </div>
+    {/* </div> */}
      </MainLayout>
   );
 };

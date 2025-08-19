@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, Flame, Shield, Car, AlertTriangle, Plus, MapPin, Phone, User, Clock, FileText, Send } from 'lucide-react';
+import MainLayout from '../../Layouts/MainLayout';
 
 const ReportEmergencyPage = () => {
   const [formData, setFormData] = useState({
@@ -131,17 +132,18 @@ const ReportEmergencyPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+  <MainLayout>
+    <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Report Emergency</h1>
+          <h1 className="text-5xl font-bold text-gray-800 mb-2">Report Emergency</h1>
           <p className="text-gray-600">Provide details about the emergency situation</p>
         </div>
 
         {/* Emergency Banner */}
         <div className="bg-red-500 text-white p-4 rounded-lg mb-6 text-center">
-          <p className="font-semibold">🚨 For immediate life-threatening emergencies, call 911 🚨</p>
+          <p className="font-semibold">🚨 For immediate life-threatening emergencies, call 112 🚨</p>
         </div>
 
         <div className="space-y-8">
@@ -324,6 +326,7 @@ const ReportEmergencyPage = () => {
         </div>
       </div>
     </div>
+    </MainLayout>
   );
 };
 
