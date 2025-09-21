@@ -25,7 +25,7 @@ export default function LoginPage() {
     <MainLayout>
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
-       <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-xl p-8">
+       <div className="bg-white/30 backdrop-blur-md rounded-2xl shadow-xl p-8">
           {/* Header */}
           <div className="flex justify-center mb-6">
            <img src={logo} alt="RescueGH Logo" className="h-60 w-auto" />
