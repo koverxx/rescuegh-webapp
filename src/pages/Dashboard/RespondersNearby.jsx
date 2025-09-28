@@ -29,7 +29,7 @@ const RespondersNearby = () => {
   const [selectedType, setSelectedType] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [sortBy, setSortBy] = useState('distance');
-  const [selectedLocation, setSelectedLocation] = useState({ lat: 40.7128, lng: -74.0060, address: 'Times Square, NYC' });
+  const [selectedLocation, setSelectedLocation] = useState({ lat: 40.7128, lng: -74.0060, address: 'Accra, Ghana' });
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update current time every minute
