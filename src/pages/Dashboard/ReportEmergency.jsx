@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Heart, Flame, Shield, Car, AlertTriangle, Plus, MapPin, Phone, User, Clock, FileText, Send } from 'lucide-react';
 import MainLayout from '../../Layouts/MainLayout';
+import { db, auth } from '../../firebase'; // Adjust path if needed
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const ReportEmergencyPage = () => {
   const [formData, setFormData] = useState({
