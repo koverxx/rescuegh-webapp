@@ -44,17 +44,17 @@ const RespondersNearby = () => {
   const responders = [
     {
       id: 'ENG-07',
-      name: 'Engine 7',
+      name: 'Fire Engine 7',
       type: 'Fire',
       status: 'available',
-      location: { lat: 40.7149, lng: -74.0087, address: '45 West 42nd Street' },
+      location: { lat: 40.7149, lng: -74.0087, address: 'Accra central' },
       distance: 0.8,
       eta: 3,
       crew: [
-        { name: 'Captain Smith', role: 'Captain', years: 12 },
-        { name: 'Lt. Johnson', role: 'Lieutenant', years: 8 },
-        { name: 'FF Martinez', role: 'Firefighter', years: 4 },
-        { name: 'FF Chen', role: 'Firefighter', years: 6 }
+        { name: 'Captain Iddrisu', role: 'Captain', years: 12 },
+        { name: 'Lt. John', role: 'Lieutenant', years: 8 },
+        { name: 'FF Amu', role: 'Firefighter', years: 4 },
+        { name: 'FF Serwaa', role: 'Firefighter', years: 6 }
       ],
       equipment: ['Pump', 'Hose', 'Ladder', 'Rescue Tools', 'Medical Kit'],
       capabilities: ['Fire Suppression', 'Water Rescue', 'Vehicle Extrication', 'Medical First Aid'],
@@ -66,14 +66,14 @@ const RespondersNearby = () => {
     },
     {
       id: 'EMS-12',
-      name: 'EMS Unit 12',
+      name: 'UGMC EMS Unit 12',
       type: 'Medical',
       status: 'available',
-      location: { lat: 40.7102, lng: -74.0051, address: '125 Broadway' },
+      location: { lat: 40.7102, lng: -74.0051, address: 'University of Ghana, Legon' },
       distance: 0.5,
       eta: 2,
       crew: [
-        { name: 'Paramedic Davis', role: 'Paramedic', years: 10 },
+        { name: 'Paramedic Adjei Kumi', role: 'Paramedic', years: 10 },
         { name: 'EMT Wilson', role: 'EMT', years: 3 }
       ],
       equipment: ['Defibrillator', 'Oxygen', 'Medications', 'Stretcher', 'Trauma Kit'],
@@ -86,15 +86,15 @@ const RespondersNearby = () => {
     },
     {
       id: 'POL-15',
-      name: 'Police Unit 15',
+      name: 'Cantonment Police Unit 15',
       type: 'Police',
       status: 'available',
-      location: { lat: 40.7114, lng: -74.0134, address: '200 West 40th Street' },
+      location: { lat: 40.7114, lng: -74.0134, address: 'Cantonment, Accra' },
       distance: 1.2,
       eta: 4,
       crew: [
-        { name: 'Officer Brown', role: 'Officer', years: 7 },
-        { name: 'Officer Taylor', role: 'Officer', years: 5 }
+        { name: 'Officer Kyei', role: 'Officer', years: 7 },
+        { name: 'Officer Twumasi', role: 'Officer', years: 5 }
       ],
       equipment: ['Patrol Vehicle', 'Communications', 'First Aid', 'Traffic Control'],
       capabilities: ['Traffic Control', 'Crowd Management', 'Security', 'First Aid'],
@@ -106,17 +106,17 @@ const RespondersNearby = () => {
     },
     {
       id: 'LAD-03',
-      name: 'Ladder 3',
+      name: 'Dansomam Fire service Ladder 3',
       type: 'Fire',
       status: 'busy',
-      location: { lat: 40.7200, lng: -74.0100, address: '300 West 50th Street' },
+      location: { lat: 40.7200, lng: -74.0100, address: 'Dansomam, Accra' },
       distance: 1.5,
       eta: 6,
       crew: [
-        { name: 'Captain Rodriguez', role: 'Captain', years: 15 },
-        { name: 'Lt. Anderson', role: 'Lieutenant', years: 9 },
+        { name: 'Captain James', role: 'Captain', years: 15 },
+        { name: 'Lt. Yaw Annor', role: 'Lieutenant', years: 9 },
         { name: 'FF Thompson', role: 'Firefighter', years: 2 },
-        { name: 'FF Lee', role: 'Firefighter', years: 7 }
+        { name: 'FF Asante', role: 'Firefighter', years: 7 }
       ],
       equipment: ['Aerial Ladder', 'Rescue Tools', 'Ventilation Equipment', 'Hose'],
       capabilities: ['High Angle Rescue', 'Ventilation', 'Search & Rescue', 'Fire Suppression'],
@@ -129,15 +129,15 @@ const RespondersNearby = () => {
     },
     {
       id: 'EMS-05',
-      name: 'EMS Unit 5',
+      name: 'Korlebu EMS Unit 5',
       type: 'Medical',
       status: 'en-route',
-      location: { lat: 40.7180, lng: -74.0070, address: '789 8th Avenue' },
+      location: { lat: 40.7180, lng: -74.0070, address: 'Korlebu Teaching Hospital' },
       distance: 1.8,
       eta: 7,
       crew: [
-        { name: 'Paramedic Garcia', role: 'Paramedic', years: 12 },
-        { name: 'EMT Jackson', role: 'EMT', years: 4 }
+        { name: 'Paramedic Nana Akua', role: 'Paramedic', years: 12 },
+        { name: 'EMT Edem', role: 'EMT', years: 4 }
       ],
       equipment: ['Advanced Life Support', 'Cardiac Monitor', 'Medications', 'Stretcher'],
       capabilities: ['Advanced Life Support', 'Critical Care Transport', 'Pediatric Care'],
@@ -150,15 +150,15 @@ const RespondersNearby = () => {
     },
     {
       id: 'POL-22',
-      name: 'Police Unit 22',
+      name: 'Tesano Police Unit 22',
       type: 'Police',
       status: 'available',
-      location: { lat: 40.7090, lng: -74.0020, address: '100 Centre Street' },
+      location: { lat: 40.7090, lng: -74.0020, address: 'Tesano, Accra' },
       distance: 2.1,
       eta: 8,
       crew: [
-        { name: 'Sergeant Miller', role: 'Sergeant', years: 11 },
-        { name: 'Officer White', role: 'Officer', years: 6 }
+        { name: 'Sergeant Appiah', role: 'Sergeant', years: 11 },
+        { name: 'Officer Wiafe', role: 'Officer', years: 6 }
       ],
       equipment: ['K-9 Unit', 'Traffic Equipment', 'Communications', 'First Aid'],
       capabilities: ['K-9 Operations', 'Traffic Enforcement', 'Drug Detection', 'Crowd Control'],
@@ -170,16 +170,16 @@ const RespondersNearby = () => {
     },
     {
       id: 'HAZ-01',
-      name: 'Hazmat Unit 1',
+      name: 'Whistle Barracks Hazmat Unit 1',
       type: 'Hazmat',
       status: 'available',
-      location: { lat: 40.7050, lng: -74.0100, address: '500 West Street' },
+      location: { lat: 40.7050, lng: -74.0100, address: 'Teshie, Accra' },
       distance: 2.5,
       eta: 10,
       crew: [
-        { name: 'Specialist Murphy', role: 'Hazmat Specialist', years: 14 },
+        { name: 'Specialist Alhassan', role: 'Hazmat Specialist', years: 14 },
         { name: 'Tech Adams', role: 'Hazmat Tech', years: 8 },
-        { name: 'FF Clark', role: 'Firefighter', years: 5 }
+        { name: 'FF Nhyira', role: 'Firefighter', years: 5 }
       ],
       equipment: ['Detection Equipment', 'Containment Gear', 'Decontamination', 'Protective Suits'],
       capabilities: ['Chemical Spill Response', 'Decontamination', 'Air Monitoring', 'Containment'],
@@ -191,16 +191,16 @@ const RespondersNearby = () => {
     },
     {
       id: 'RES-04',
-      name: 'Rescue 4',
+      name: 'NADMO Rescue 4',
       type: 'Rescue',
       status: 'maintenance',
       location: { lat: 40.7250, lng: -74.0150, address: '800 West 55th Street' },
       distance: 3.2,
       eta: 12,
       crew: [
-        { name: 'Captain Lewis', role: 'Captain', years: 16 },
-        { name: 'Specialist King', role: 'Rescue Specialist', years: 10 },
-        { name: 'Tech Parker', role: 'Rescue Tech', years: 6 }
+        { name: 'Captain Kamal', role: 'Captain', years: 16 },
+        { name: 'Specialist Adu', role: 'Rescue Specialist', years: 10 },
+        { name: 'Tech Jackson', role: 'Rescue Tech', years: 6 }
       ],
       equipment: ['Heavy Rescue Tools', 'Cutting Equipment', 'Lifting Bags', 'Rope Rescue'],
       capabilities: ['Technical Rescue', 'Vehicle Extrication', 'Collapse Rescue', 'Confined Space'],

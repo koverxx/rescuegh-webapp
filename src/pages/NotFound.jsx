@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Home, Phone, MapPin, AlertTriangle, ArrowLeft, Search, Users, Settings } from 'lucide-react';
+// import MainLayout from '../../Layouts/MainLayout';
 
 export default function NotFoundPage() {
   const [countdown, setCountdown] = useState(10);
@@ -12,7 +13,7 @@ export default function NotFoundPage() {
       }, 1000);
       return () => clearTimeout(timer);
     } else if (autoRedirect && countdown === 0) {
-      // In a real app, you'd redirect to home here
+      
       console.log('Redirecting to home...');
     }
   }, [countdown, autoRedirect]);

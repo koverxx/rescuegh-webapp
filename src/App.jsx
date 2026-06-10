@@ -22,7 +22,7 @@ function App() {
         <Route path="/report" element={<ReportEmergency />} />
         <Route path="/history" element={<EmergencyHistory />} />
         <Route path="/tracker" element={<EmergencyTracker />} />
-        <Route path="/responders" element={<RespondersNearby />} />
+        <Route path="/nearby" element={<RespondersNearby />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/settings" element={<AppSettings />} />
         <Route path="*" element={<NotFound />} />

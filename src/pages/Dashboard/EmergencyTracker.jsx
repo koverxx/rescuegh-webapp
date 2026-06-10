@@ -49,7 +49,7 @@ const EmergencyTracker = () => {
       id: 'EMG-2024-001',
       type: 'Fire',
       title: 'Structure Fire - Residential',
-      location: '1247 Oak Avenue, Sector 7',
+      location: 'Makola Market, Accra',
       coordinates: { lat: 40.7128, lng: -74.0060 },
       reportedTime: new Date(Date.now() - 45 * 60000), // 45 minutes ago
       priority: 'critical',
@@ -62,7 +62,7 @@ const EmergencyTracker = () => {
         { unit: 'Battalion Chief 1', status: 'en-route', eta: '5 min' }
       ],
       caller: 'Anonymous',
-      contact: '911',
+      contact: '192',
       updates: [
         { time: new Date(Date.now() - 45 * 60000), message: 'Initial report received' },
         { time: new Date(Date.now() - 40 * 60000), message: 'First responders dispatched' },
@@ -74,19 +74,19 @@ const EmergencyTracker = () => {
       id: 'EMG-2024-002',
       type: 'Medical',
       title: 'Cardiac Emergency',
-      location: 'Downtown Shopping Center, Mall Entrance',
+      location: 'University of Ghana, Legon',
       coordinates: { lat: 40.7580, lng: -73.9855 },
       reportedTime: new Date(Date.now() - 20 * 60000), // 20 minutes ago
       priority: 'critical',
       status: 'active',
-      description: 'Male, approx. 60 years old, cardiac arrest. CPR in progress by bystanders.',
+      description: 'Male, approx. 40 years old, cardiac arrest. CPR in progress by bystanders.',
       responders: [
         { unit: 'EMS Unit 5', status: 'on-scene', eta: null },
         { unit: 'EMS Unit 8', status: 'en-route', eta: '3 min' },
         { unit: 'Police Unit 15', status: 'on-scene', eta: null }
       ],
-      caller: 'Sarah Johnson',
-      contact: '(555) 123-4567',
+      caller: 'Sarah Acheampong',
+      contact: '(020) 123-4567',
       updates: [
         { time: new Date(Date.now() - 20 * 60000), message: 'Emergency reported' },
         { time: new Date(Date.now() - 18 * 60000), message: 'EMS dispatched' },
@@ -98,7 +98,7 @@ const EmergencyTracker = () => {
       id: 'EMG-2024-003',
       type: 'Traffic',
       title: 'Multi-Vehicle Accident',
-      location: 'Highway 95, Northbound Mile 23',
+      location: 'Kwahmang, Ashanti Region',
       coordinates: { lat: 40.6892, lng: -74.0445 },
       reportedTime: new Date(Date.now() - 15 * 60000), // 15 minutes ago
       priority: 'high',
@@ -110,8 +110,8 @@ const EmergencyTracker = () => {
         { unit: 'Fire Rescue 4', status: 'en-route', eta: '7 min' },
         { unit: 'Tow Truck', status: 'dispatched', eta: '15 min' }
       ],
-      caller: 'John Martinez',
-      contact: '(555) 987-6543',
+      caller: 'Jefrey Mensah',
+      contact: '(024) 567-8901',
       updates: [
         { time: new Date(Date.now() - 15 * 60000), message: 'Accident reported' },
         { time: new Date(Date.now() - 12 * 60000), message: 'Police on scene' },
@@ -122,7 +122,7 @@ const EmergencyTracker = () => {
       id: 'EMG-2024-004',
       type: 'Weather',
       title: 'Storm Damage - Power Lines Down',
-      location: 'Elm Street & 5th Avenue',
+      location: 'Teshie, Accra',
       coordinates: { lat: 40.7505, lng: -73.9934 },
       reportedTime: new Date(Date.now() - 60 * 60000), // 1 hour ago
       priority: 'medium',
@@ -134,7 +134,7 @@ const EmergencyTracker = () => {
         { unit: 'Fire Safety', status: 'standby', eta: null }
       ],
       caller: 'City Utilities',
-      contact: '(555) 111-2222',
+      contact: '(030) 111-2222',
       updates: [
         { time: new Date(Date.now() - 60 * 60000), message: 'Power lines reported down' },
         { time: new Date(Date.now() - 55 * 60000), message: 'Area secured' },

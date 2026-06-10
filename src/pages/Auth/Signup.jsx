@@ -232,7 +232,7 @@ const SignUpPage = () => {
                   className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors ${
                     errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="+233-123-4567"
                 />
                 {errors.phone && (
                   <div className="absolute -bottom-5 left-0 text-red-500 text-xs flex items-center">
