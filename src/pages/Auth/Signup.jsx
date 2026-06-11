@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, User, Lock, Phone, CheckCircle, AlertCircle } from 'lucide-react';
 import logo from '../../assets/rescueGH-Logo.png';
 import MainLayout from '../../Layouts/MainLayout';
+import { auth, db } from '../../firebase'; 
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
@@ -44,8 +47,8 @@ const SignUpPage = () => {
     
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
+    } else if (formData.password.length < 6) { // Changed to 6 to match Firebase default requirements
+      newErrors.password = 'Password must be at least 6 characters long';
     }
     
     if (!formData.confirmPassword) {
@@ -78,23 +81,40 @@ const SignUpPage = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     
+    // Run the UI validation. If it fails, stop the function.
     if (!validateForm()) {
-      return;
+       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 1. Create the secure user account in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        formData.email, 
+        formData.password
+      );
       
-      // Handle successful sign up
-      alert('Account created successfully! Please check your email to verify your account.');
-      
-      // Reset form
+      const user = userCredential.user;
+
+      // 2. Store the rest of their details in the Firestore 'users' collection
+      await setDoc(doc(db, 'users', user.uid), {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        role: 'citizen',
+        createdAt: new Date().toISOString()
+      });
+
+      console.log("Real User Created! UID:", user.uid);
+      alert('Account created successfully! You are now logged in.');
+
+      // 3. Clear the form
       setFormData({
         firstName: '',
         lastName: '',
@@ -104,9 +124,16 @@ const SignUpPage = () => {
         confirmPassword: '',
         termsAccepted: false
       });
-      
+
     } catch (error) {
-      alert('Something went wrong. Please try again.');
+      console.error("Signup Error:", error);
+      if (error.code === 'auth/email-already-in-use') {
+        alert('This email is already registered. Please log in.');
+      } else if (error.code === 'auth/weak-password') {
+        alert('Password should be at least 6 characters.');
+      } else {
+        alert('Failed to create account. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -129,9 +156,13 @@ const SignUpPage = () => {
           <p className="text-gray-600">Join us and start your journey today</p>
         </div>
 
-        {/* Form */}
+        {/* CRITICAL FIX: The entire block below is now wrapped inside a <form> tag.
+            noValidate prevents the browser from doing ugly default HTML validation
+            so your beautiful custom React error messages can show up instead.
+        */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          <div className="space-y-6">
+          <form onSubmit={handleSignup} className="space-y-6" noValidate>
+            
             {/* Name Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -376,13 +407,14 @@ const SignUpPage = () => {
                 'Create Account'
               )}
             </button>
-          </div>
-
+            
+          </form> {/* <--- THIS IS THE CLOSING FORM TAG THAT SAVES THE DAY */}
+          
           {/* Sign In Link */}
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Already have an account?{' '}
-              <a href="#" className="text-blue-600 hover:text-blue-500 font-medium hover:underline">
+              <a href="/login" className="text-blue-600 hover:text-blue-500 font-medium hover:underline">
                 Sign in
               </a>
             </p>

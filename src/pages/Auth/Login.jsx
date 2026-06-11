@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // Teleports the user after success
 import logo from '../../assets/rescueGH-Logo.png'; 
 import MainLayout from '../../Layouts/MainLayout';
 
+// Firebase imports
+import { auth } from '../../firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+
 export default function LoginPage() {
+  const navigate = useNavigate(); // Initialize navigation
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -11,14 +17,41 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Quick safety check
+    if (!email || !password) {
+      alert("Please enter both email and password.");
+      return;
+    }
+
     setIsLoading(true);
     
-    // Simulate login API call
-    setTimeout(() => {
-      console.log('Login attempt:', { email, password });
+    try {
+      // FIREBASE MAGIC: Verify credentials
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('✅ Login Success! User ID:', userCredential.user.uid);
+      
+      // Clear the form for security
+      setEmail('');
+      setPassword('');
+
+      // Teleport the user straight to the emergency report page!
+      navigate('/report'); 
+
+    } catch (error) {
+      console.error('Login Error:', error);
+      
+      // Handle explicit Firebase errors gracefully
+      if (error.code === 'auth/invalid-credential') {
+        alert('Incorrect email or password. Please try again.');
+      } else if (error.code === 'auth/too-many-requests') {
+        alert('Too many failed attempts. Please try again later.');
+      } else {
+        alert('Failed to log in. Please check your connection.');
+      }
+    } finally {
       setIsLoading(false);
-      // Here you would typically handle the login logic
-    }, 1000);
+    }
   };
 
   return (
@@ -26,6 +59,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
        <div className="bg-white/30 backdrop-blur-md rounded-2xl shadow-xl p-8">
+          
           {/* Header */}
           <div className="flex justify-center mb-6">
            <img src={logo} alt="RescueGH Logo" className="h-60 w-auto" />
@@ -38,8 +72,9 @@ export default function LoginPage() {
             <p className="text-gray-600 mt-2">Sign in to your account</p>
           </div>
 
-          {/* Form */}
-          <div className="space-y-6">
+          {/* CRITICAL FIX: Changed from <div> to <form> with noValidate */}
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -111,17 +146,16 @@ export default function LoginPage() {
                 </label>
               </div>
               <div className="text-sm">
-                <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+                <a href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
                   Forgot your password?
                 </a>
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit Button - CRITICAL FIX: type="submit" */}
             <button
-              type="button"
+              type="submit"
               disabled={isLoading}
-              onClick={handleSubmit}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               {isLoading ? (
@@ -138,12 +172,13 @@ export default function LoginPage() {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{' '}
-                <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+                <a href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
                   Sign up
                 </a>
               </p>
             </div>
-          </div>
+            
+          </form>
         </div>
       </div>
     </div>
