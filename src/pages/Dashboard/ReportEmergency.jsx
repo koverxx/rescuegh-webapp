@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { Heart, Flame, Shield, Car, AlertTriangle, Plus, MapPin, Phone, User, FileText, Send, Crosshair } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom'; // <--- MAGIC WIRING 1: Added useLocation
 import MainLayout from '../../Layouts/MainLayout';
 import { db, auth } from '../../firebase'; 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const ReportEmergencyPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation(); // <--- MAGIC WIRING 2: Initialized the location hook
+
+  // MAGIC WIRING 3: The form now checks if the router handed it any pre-filled data!
   const [formData, setFormData] = useState({
-    emergencyType: '',
-    priority: '',
+    emergencyType: location.state?.prefilledType || '',
+    priority: location.state?.prefilledPriority || '',
     location: '',
     description: '',
     injuries: '',
@@ -19,7 +24,7 @@ const ReportEmergencyPage = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isFetchingGPS, setIsFetchingGPS] = useState(false); // New state for GPS loading
+  const [isFetchingGPS, setIsFetchingGPS] = useState(false); 
 
   const emergencyTypes = [
     { id: 'medical', label: 'Medical', description: 'Health emergencies', color: 'bg-red-500', icon: Heart },
@@ -45,7 +50,6 @@ const ReportEmergencyPage = () => {
     }));
   };
 
-  // NEW: Advanced HTML5 Geolocation function
   const getLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
@@ -56,7 +60,6 @@ const ReportEmergencyPage = () => {
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        // Automatically inject the coordinates into the location text field
         setFormData(prev => ({ ...prev, location: `GPS: ${lat}, ${lng}` }));
         setIsFetchingGPS(false);
       },
@@ -86,7 +89,6 @@ const ReportEmergencyPage = () => {
         return;
       }
 
-      // CRITICAL FIX: All formData fields are now successfully mapped to the database payload
       const docRef = await addDoc(collection(db, 'emergencies'), {
         reporterId: currentUser.uid,
         emergencyType: formData.emergencyType,
@@ -108,12 +110,8 @@ const ReportEmergencyPage = () => {
       setIsSubmitted(true);
 
       setTimeout(() => {
-        setIsSubmitted(false);
-        setFormData({
-          emergencyType: '', priority: '', location: '', description: '',
-          injuries: '', reporterName: '', reporterPhone: '', reporterEmail: '', additionalInfo: ''
-        });
-      }, 4000); 
+        navigate(`/tracker/${docRef.id}`);
+      }, 2000);
 
     } catch (error) {
       console.error("Error submitting report:", error);
@@ -155,7 +153,6 @@ const ReportEmergencyPage = () => {
           <p className="font-semibold">🚨 For immediate life-threatening emergencies, call 112 🚨</p>
         </div>
 
-        {/* CRITICAL FIX: The entire data collection area is now a <form> */}
         <form onSubmit={handleSubmit} className="space-y-8" noValidate>
           
           {/* Emergency Type Selection */}

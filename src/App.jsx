@@ -21,7 +21,10 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/report" element={<ReportEmergency />} />
         <Route path="/history" element={<EmergencyHistory />} />
-        <Route path="/tracker" element={<EmergencyTracker />} />
+        
+        {/* CRITICAL FIX: Added /:id to catch the Firebase Document ID */}
+        <Route path="/tracker/:id" element={<EmergencyTracker />} />
+        
         <Route path="/nearby" element={<RespondersNearby />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/settings" element={<AppSettings />} />

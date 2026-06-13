@@ -35,8 +35,8 @@ export default function LoginPage() {
       setEmail('');
       setPassword('');
 
-      // Teleport the user straight to the emergency report page!
-      navigate('/report'); 
+      // CRITICAL FIX: Teleport the user straight to the new Citizen Dashboard!
+      navigate('/home'); 
 
     } catch (error) {
       console.error('Login Error:', error);
@@ -72,7 +72,6 @@ export default function LoginPage() {
             <p className="text-gray-600 mt-2">Sign in to your account</p>
           </div>
 
-          {/* CRITICAL FIX: Changed from <div> to <form> with noValidate */}
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             
             {/* Email Field */}
@@ -152,7 +151,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Submit Button - CRITICAL FIX: type="submit" */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
