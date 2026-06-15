@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, CheckCircle, AlertCircle, Shield, Clock } from 'lucide-react';
 import MainLayout from '../../Layouts/MainLayout';
 
+// Firebase imports
+import { auth } from '../../firebase';
+import { sendPasswordResetEmail } from 'firebase/auth';
+
 const ForgotPasswordPage = () => {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -14,7 +21,7 @@ const ForgotPasswordPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     
     if (!email.trim()) {
       setError('Email address is required');
@@ -30,15 +37,20 @@ const ForgotPasswordPage = () => {
     setError('');
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // THE REAL FIREBASE FUNCTION CALL
+      await sendPasswordResetEmail(auth, email);
       
-      // Success - show confirmation
+      // Success - transition to the success screen
       setEmailSent(true);
       startResendCooldown();
       
-    } catch (error) {
-      setError('Something went wrong. Please try again.');
+    } catch (err) {
+      console.error("Password Reset Error:", err);
+      if (err.code === 'auth/user-not-found') {
+        setError('No account found with this email address.');
+      } else {
+        setError('Failed to send reset email. Please check your connection.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -63,26 +75,26 @@ const ForgotPasswordPage = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // THE REAL FIREBASE FUNCTION CALL FOR RESENDING
+      await sendPasswordResetEmail(auth, email);
       startResendCooldown();
-    } catch (error) {
-      setError('Failed to resend email. Please try again.');
+    } catch (err) {
+      console.error("Resend Error:", err);
+      setError('Failed to resend email. Please wait a moment and try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleBackToLogin = () => {
-    // Navigate back to login
-    console.log('Navigate to login');
+    navigate('/login');
   };
 
   if (emailSent) {
     return (
       <MainLayout>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
+        <div className="max-w-md w-full animate-in fade-in zoom-in duration-300">
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center">
             {/* Success Icon */}
             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-6">
@@ -135,6 +147,9 @@ const ForgotPasswordPage = () => {
                   'Resend Email'
                 )}
               </button>
+              
+              {/* Added subtle error handling to the success screen just in case resend fails */}
+              {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
             </div>
             
             {/* Back to Login */}
@@ -167,7 +182,7 @@ const ForgotPasswordPage = () => {
 
         {/* Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          <div className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -192,7 +207,7 @@ const ForgotPasswordPage = () => {
                   autoComplete="email"
                 />
                 {error && (
-                  <div className="absolute -bottom-5 left-0 text-red-500 text-xs flex items-center">
+                  <div className="absolute -bottom-5 left-0 text-red-500 text-xs flex items-center font-bold">
                     <AlertCircle className="w-3 h-3 mr-1" />
                     {error}
                   </div>
@@ -202,7 +217,7 @@ const ForgotPasswordPage = () => {
 
             {/* Submit Button */}
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={isSubmitting}
               className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-200 ${
                 isSubmitting
@@ -233,7 +248,7 @@ const ForgotPasswordPage = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </form>
 
           {/* Back to Login Link */}
           <div className="mt-6 text-center">

@@ -27,7 +27,6 @@ const RespondersNearby = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Haversine GPS Math Formula
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -39,15 +38,12 @@ const RespondersNearby = () => {
     return parseFloat((R * c).toFixed(1)); 
   };
 
-  // The OpenStreetMap Overpass API Fetcher
   const fetchOpenStreetData = async (userLat, userLng) => {
     setIsFetchingData(true);
     setLiveResponders([]); 
 
-    // Search radius in meters (10,000m = 10km)
     const radius = 10000;
     
-    // The Overpass Query Language
     const query = `
       [out:json][timeout:25];
       (
@@ -101,9 +97,7 @@ const RespondersNearby = () => {
         };
       });
 
-      // Filter out unnamed nodes for a cleaner UI
       const validResults = formattedResults.filter(r => !r.name.includes('Unnamed'));
-      
       setLiveResponders(validResults);
 
     } catch (error) {
@@ -124,7 +118,6 @@ const RespondersNearby = () => {
           
           setUserLocation({ lat, lng, address: 'Your Live GPS Location' });
           setIsLocating(false);
-          
           fetchOpenStreetData(lat, lng);
         },
         (error) => {
@@ -155,6 +148,25 @@ const RespondersNearby = () => {
     }
   };
 
+  // SMART DISPATCH ROUTER
+  const handleCallUnit = (responder) => {
+    // 1. If OpenStreetMap actually has the direct number, dial it immediately!
+    if (responder.phone && responder.phone !== 'N/A') {
+      window.location.href = `tel:${responder.phone}`;
+      return;
+    }
+
+    // 2. If the number is missing, route them to Ghana's National Dispatch based on the facility type
+    let dispatchNumber = '112'; // Default general emergency
+    if (responder.type === 'Police') dispatchNumber = '191';
+    else if (responder.type === 'Fire') dispatchNumber = '192';
+    else if (responder.type === 'Medical') dispatchNumber = '193';
+
+    // 3. Warn the user and launch the phone dialer
+    alert(`No direct line listed for ${responder.name}. Redirecting to National ${responder.type} Dispatch (${dispatchNumber}).`);
+    window.location.href = `tel:${dispatchNumber}`;
+  };
+
   const filteredResponders = liveResponders.filter(responder => {
     const matchesSearch = responder.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          responder.location.address.toLowerCase().includes(searchTerm.toLowerCase());
@@ -179,26 +191,27 @@ const RespondersNearby = () => {
     <MainLayout>
     <div className="min-h-screen">
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-5xl font-bold text-gray-900 flex items-center gap-2">
-                <Navigation className="h-6 w-6 text-blue-500" />
+              <h1 className="text-3xl md:text-5xl font-bold text-gray-900 flex items-center gap-2">
+                <Navigation className="h-6 w-6 text-blue-500 shrink-0" />
                 Responders Nearby
               </h1>
               <p className="text-sm text-gray-600 mt-1">
                 Real-time mapping via OpenStreetMap Data
               </p>
             </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-600 mb-1 flex justify-end items-center">
+            
+            <div className="self-start md:text-right">
+              <div className="text-sm text-gray-600 mb-1 flex items-center md:justify-end">
                 <MapPin size={14} className="mr-1 text-red-500" /> 
                 System Reference Point 
               </div>
               <button 
                 onClick={grabLiveLocation}
                 disabled={isLocating || isFetchingData}
-                className="flex items-center text-sm font-semibold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors disabled:opacity-50"
+                className="flex items-center w-full md:w-auto justify-center text-sm font-semibold bg-blue-50 text-blue-700 px-4 py-2 rounded-lg md:rounded-full hover:bg-blue-100 transition-colors disabled:opacity-50"
               >
                 <Crosshair size={14} className={`mr-2 ${(isLocating || isFetchingData) ? 'animate-spin' : ''}`} />
                 {isLocating ? 'Acquiring GPS...' : isFetchingData ? 'Querying OSM Database...' : userLocation.address}
@@ -214,16 +227,16 @@ const RespondersNearby = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center mb-6">
             <AlertCircle className="w-12 h-12 text-blue-500 mx-auto mb-3" />
             <h3 className="text-lg font-bold text-gray-900 mb-1">Awaiting Coordinates</h3>
-            <p className="text-gray-600">Click the "System Reference Point" button in the top right to locate your coordinates and ping the database.</p>
+            <p className="text-gray-600 text-sm md:text-base">Click the "System Reference Point" button to locate your coordinates and ping the database.</p>
           </div>
         )}
 
         {liveResponders.length > 0 && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
                 <div className="flex items-center">
-                  <CheckCircle className="h-8 w-8 text-green-500" />
+                  <CheckCircle className="h-8 w-8 text-green-500 shrink-0" />
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-600">Verified Units</p>
                     <p className="text-2xl font-bold text-gray-900">{availableCount}</p>
@@ -232,7 +245,7 @@ const RespondersNearby = () => {
               </div>
               <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
                 <div className="flex items-center">
-                  <Truck className="h-8 w-8 text-blue-500" />
+                  <Truck className="h-8 w-8 text-blue-500 shrink-0" />
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-600">Total Pulled from API</p>
                     <p className="text-2xl font-bold text-gray-900">{liveResponders.length}</p>
@@ -241,7 +254,7 @@ const RespondersNearby = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 mb-6 border border-gray-100">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -254,9 +267,9 @@ const RespondersNearby = () => {
                   />
                 </div>
 
-                <div className="flex gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex gap-3 lg:gap-4">
                   <select
-                    className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${selectedType !== 'all' ? 'bg-red-50 border-red-300 font-bold text-red-700' : 'border-gray-300'}`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${selectedType !== 'all' ? 'bg-red-50 border-red-300 font-bold text-red-700' : 'border-gray-300'}`}
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
                   >
@@ -267,11 +280,11 @@ const RespondersNearby = () => {
                   </select>
 
                   <select
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-medium text-sm md:text-base"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                   >
-                    <option value="distance">📍 Sort by Closest Distance</option>
+                    <option value="distance">📍 Sort by Closest</option>
                     <option value="eta">⏱ Sort by Fastest ETA</option>
                   </select>
                 </div>
@@ -280,59 +293,62 @@ const RespondersNearby = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {sortedResponders.map((responder) => (
-                <div key={responder.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md hover:border-blue-300 transition-all">
-                  <div className="p-6">
+                <div key={responder.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-300 transition-all">
+                  <div className="p-4 md:p-6">
                     <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gray-50 rounded-lg border border-gray-100">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-gray-50 rounded-lg border border-gray-100 shrink-0">
                           {getTypeIcon(responder.type)}
                         </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900 leading-tight">{responder.name}</h3>
-                          <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                            <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-xs">ID: {responder.id}</span>
-                            <span>•</span>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-base md:text-lg font-bold text-gray-900 leading-tight truncate" title={responder.name}>{responder.name}</h3>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-1">
+                            <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-[10px]">ID: {responder.id}</span>
+                            <span className="hidden sm:inline">•</span>
                             <span className="font-semibold uppercase tracking-wider text-[10px]">{responder.type}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider ${getStatusColor(responder.status)}`}>
+                      <div className="shrink-0 ml-2">
+                        <span className={`px-2 py-1 md:px-3 rounded-full text-[10px] md:text-xs font-bold border uppercase tracking-wider ${getStatusColor(responder.status)}`}>
                           {responder.status}
                         </span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Route className="h-5 w-5 text-blue-600" />
-                        <span className="text-gray-900 font-bold">{responder.distance} km away</span>
+                    <div className="grid grid-cols-2 gap-2 md:gap-4 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <div className="flex items-center gap-2 text-xs md:text-sm">
+                        <Route className="h-4 w-4 md:h-5 md:w-5 text-blue-600 shrink-0" />
+                        <span className="text-gray-900 font-bold truncate">{responder.distance} km away</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm border-l border-gray-200 pl-4">
-                        <Clock className="h-5 w-5 text-orange-500" />
-                        <span className="text-gray-900 font-bold">ETA: {responder.eta} min</span>
+                      <div className="flex items-center gap-2 text-xs md:text-sm border-l border-gray-200 pl-3 md:pl-4">
+                        <Clock className="h-4 w-4 md:h-5 md:w-5 text-orange-500 shrink-0" />
+                        <span className="text-gray-900 font-bold truncate">ETA: {responder.eta} min</span>
                       </div>
                     </div>
 
                     <div className="mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-700 font-medium">
-                        <MapPin className="h-4 w-4 text-red-500 shrink-0" />
-                        <span className="truncate">{responder.location.address}</span>
+                      <div className="flex items-start gap-2 text-xs md:text-sm text-gray-700 font-medium">
+                        <MapPin className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{responder.location.address}</span>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-4 border-t border-gray-100">
+                    <div className="flex flex-col sm:flex-row gap-2 md:gap-3 pt-4 border-t border-gray-100">
+                      {/* SMART FALLBACK BUTTON */}
                       <button 
-                        onClick={() => alert(responder.phone !== 'N/A' ? `Contact: ${responder.phone}` : 'No public phone number listed for this facility in OpenStreetMap.')}
-                        className="flex items-center gap-1 px-4 py-2 bg-blue-50 text-blue-700 font-bold rounded-lg hover:bg-blue-100 transition-colors text-sm flex-1 justify-center"
+                        onClick={() => handleCallUnit(responder)}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 font-bold rounded-lg hover:bg-blue-100 transition-colors text-sm w-full justify-center"
                       >
-                        <Phone className="h-4 w-4" /> Get Contact Info
+                        <Phone className="h-4 w-4 shrink-0" /> 
+                        {responder.phone !== 'N/A' ? 'Call Direct Line' : 'Call Dispatch'}
                       </button>
+                      
                       <button 
                         onClick={() => window.open(`http://maps.google.com/?q=${responder.location.lat},${responder.location.lng}`)}
-                        className="flex items-center gap-1 px-4 py-2 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 shadow-sm transition-colors text-sm flex-1 justify-center"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-600 shadow-sm transition-colors text-sm w-full justify-center"
                       >
-                        <Navigation className="h-4 w-4" /> Map Route
+                        <Navigation className="h-4 w-4 shrink-0" /> Map Route
                       </button>
                     </div>
                   </div>

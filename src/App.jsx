@@ -10,6 +10,8 @@ import RespondersNearby from './pages/Dashboard/RespondersNearby';
 import UserProfile from './pages/Profile/UserProfile';
 import AppSettings from './pages/Settings/AppSettings';
 import NotFound from './pages/NotFound';
+import DispatchDashboard from './pages/Admin/DispatchDashboard';
+import AdminMap from './pages/Admin/AdminMap';
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
         <Route path="/nearby" element={<RespondersNearby />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/settings" element={<AppSettings />} />
+        <Route path="/dispatch/*" element={<DispatchDashboard />} />
+        <Route path="/adminmap" element={<AdminMap />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
