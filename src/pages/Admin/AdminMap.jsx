@@ -8,26 +8,26 @@ import { db } from '../../firebase';
 import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
-// ULTIMATE TRANSLATOR: Catches Strings, GeoPoints, Arrays, and standard Objects
+
 const parseLocation = (loc) => {
   if (!loc) return null;
 
-  // Case 1: It's an Object (like a Firebase GeoPoint or standard LatLng)
+
   if (typeof loc === 'object') {
     if (loc.lat !== undefined && loc.lng !== undefined) {
       return { lat: Number(loc.lat), lng: Number(loc.lng) };
     }
     if (loc.latitude !== undefined && loc.longitude !== undefined) {
-      return { lat: Number(loc.latitude), lng: Number(loc.longitude) }; // Catches Firebase GeoPoints
+      return { lat: Number(loc.latitude), lng: Number(loc.longitude) }; 
     }
     if (Array.isArray(loc) && loc.length >= 2) {
-      return { lat: Number(loc[0]), lng: Number(loc[1]) }; // Catches [lat, lng] arrays
+      return { lat: Number(loc[0]), lng: Number(loc[1]) }; 
     }
   }
 
-  // Case 2: It's a String (like "GPS: 5.5, -0.1" OR just "5.5, -0.1")
+
   if (typeof loc === 'string') {
-    // This strips out "GPS:" and any letters, leaving only the raw coordinates and commas
+   
     const cleanString = loc.replace(/[a-zA-Z:]/g, '').trim();
     const parts = cleanString.split(',');
     
@@ -35,14 +35,14 @@ const parseLocation = (loc) => {
       const parsedLat = parseFloat(parts[0].trim());
       const parsedLng = parseFloat(parts[1].trim());
       
-      // Ensure they are actually valid numbers before returning
+    
       if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
         return { lat: parsedLat, lng: parsedLng };
       }
     }
   }
 
-  // If it's completely unreadable or missing, return null
+ 
   return null;
 };
 
