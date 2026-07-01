@@ -9,7 +9,7 @@ const ActiveIncidents = () => {
   const [emergencies, setEmergencies] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // NEW: State to manage the Details Modal
+  
   const [selectedIncident, setSelectedIncident] = useState(null);
   
   const navigate = useNavigate();
@@ -34,11 +34,11 @@ const ActiveIncidents = () => {
   );
 
   const handleAssignDispatch = (e, incidentId, unitId) => {
-    e.stopPropagation(); // Prevents the row click event from firing when clicking a button
+    e.stopPropagation();
     navigate(`/adminmap?incident=${incidentId}&unit=${unitId}`);
   };
 
-  // Add this right above the return statement!
+ 
   console.log("RAW FIREBASE DATA:", selectedIncident);
 
   return (
