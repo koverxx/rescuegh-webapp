@@ -30,7 +30,7 @@ const EmergencyHomePage = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  // Dynamic Rotating Alerts
+
   const activeAlerts = [
     {
       id: 1,
@@ -174,20 +174,19 @@ const EmergencyHomePage = () => {
 
   return (
     <MainLayout>
-      {/* UPGRADED HEADER */}
       <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3">
             
-            {/* MASSIVE LOGO */}
+          
             <div className="flex items-center">
                <img src={logo} alt="RescueGH Logo" className="h-20 md:h-24 w-auto drop-shadow-sm transition-all" />
             </div>
             
-            {/* Interactive Icons */}
+        
             <div className="flex items-center space-x-6">
               
-              {/* Dynamic Notification Bell */}
+           
               <div className="relative">
                 <button 
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -199,7 +198,6 @@ const EmergencyHomePage = () => {
                   </span>
                 </button>
 
-                {/* Notifications Dropdown */}
                 {showNotifications && (
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-4">
                     <div className="px-4 py-2 border-b border-gray-100">

@@ -22,11 +22,11 @@ const AdminLayout = ({ children }) => {
 
   // The Sidebar Navigation Links
   const navLinks = [
-    { name: 'Dashboard', path: '/dispatch', icon: LayoutDashboard },
-    { name: 'Active Incidents', path: '/dispatch/incidents', icon: AlertOctagon },
-    { name: 'Live Map', path: '/dispatch/map', icon: Map },
-    { name: 'Fleet & Units', path: '/dispatch/fleet', icon: Radio },
-    { name: 'Citizen Records', path: '/dispatch/records', icon: Users },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Active Incidents', path: '/active-incidents', icon: AlertOctagon },
+    { name: 'Live Map', path: '/adminmap', icon: Map },
+    { name: 'Fleet & Units', path: '/fleet', icon: Radio },
+    { name: 'Citizen Records', path: '/records', icon: Users },
   ];
 
   const SidebarContent = () => (

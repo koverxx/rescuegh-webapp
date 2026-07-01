@@ -12,6 +12,7 @@ import AppSettings from './pages/Settings/AppSettings';
 import NotFound from './pages/NotFound';
 import DispatchDashboard from './pages/Admin/DispatchDashboard';
 import AdminMap from './pages/Admin/AdminMap';
+import ActiveIncidents from './pages/Admin/ActiveIncidents';
 
 function App() {
   return (
@@ -24,14 +25,15 @@ function App() {
         <Route path="/report" element={<ReportEmergency />} />
         <Route path="/history" element={<EmergencyHistory />} />
         
-        {/* CRITICAL FIX: Added /:id to catch the Firebase Document ID */}
         <Route path="/tracker/:id" element={<EmergencyTracker />} />
         
         <Route path="/nearby" element={<RespondersNearby />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/settings" element={<AppSettings />} />
-        <Route path="/dispatch/*" element={<DispatchDashboard />} />
+
+        <Route path="/dashboard/*" element={<DispatchDashboard />} />
         <Route path="/adminmap" element={<AdminMap />} />
+        <Route path="/active-incidents" element={<ActiveIncidents />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
