@@ -7,7 +7,7 @@ import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestor
 const Dashboard = () => {
   const [emergencies, setEmergencies] = useState([]);
   
-  // Ghanaian Fleet Status (Mocked for the dashboard view)
+ 
   const [fleet] = useState([
     { id: 'NAS-01', agency: 'National Ambulance', status: 'Available', color: 'bg-emerald-500' },
     { id: 'GPS-01', agency: 'Ghana Police', status: 'Dispatched', color: 'bg-blue-600' },
@@ -15,9 +15,9 @@ const Dashboard = () => {
     { id: 'NAS-02', agency: 'National Ambulance', status: 'Maintenance', color: 'bg-slate-400' },
   ]);
 
-  // Listen to live emergencies
+ 
   useEffect(() => {
-    // We order by createdAt so the newest are at the top
+   
     const q = query(collection(db, 'emergencies'), orderBy('createdAt', 'desc'), limit(5));
     const unsub = onSnapshot(q, (snap) => {
       setEmergencies(snap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -28,7 +28,7 @@ const Dashboard = () => {
   const activeCount = emergencies.filter(e => e.status !== 'resolved').length;
   const resolvedCount = emergencies.filter(e => e.status === 'resolved').length;
 
-  // Helper to format Firebase timestamps safely
+ 
   const formatTime = (timestamp) => {
     if (!timestamp) return 'Just now';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
