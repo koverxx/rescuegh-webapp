@@ -8,21 +8,25 @@ import {
 import logo from '../../assets/rescueGH-Logo.png';
 import MainLayout from '../../Layouts/MainLayout.jsx';
 
-import { auth } from '../../firebase';
+import { auth, db } from '../../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 const EmergencyHomePage = () => {
   const navigate = useNavigate();
 
   const [sosPressed, setSosPressed] = useState(false);
   const [userName, setUserName] = useState('Citizen'); 
+  const [userId, setUserId] = useState(null); 
   const [showNotifications, setShowNotifications] = useState(false);
+  
+  const [liveAlerts, setLiveAlerts] = useState([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const nameToDisplay = user.displayName || user.email.split('@')[0];
-        setUserName(nameToDisplay);
+        setUserName(user.displayName || user.email.split('@')[0]);
+        setUserId(user.uid);
       } else {
         navigate('/login'); 
       }
@@ -30,10 +34,65 @@ const EmergencyHomePage = () => {
     return () => unsubscribe();
   }, [navigate]);
 
+  useEffect(() => {
+    if (!userId) return;
 
-  const activeAlerts = [
+    const q = query(collection(db, 'emergencies'), where('reporterId', '==', userId));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const userEmergencies = [];
+      
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const status = (data.status || 'PENDING').toUpperCase();
+        const type = data.emergencyType || 'Emergency';
+        
+        let title = '';
+        let message = '';
+        let severity = 'medium';
+
+        if (status === 'PENDING') {
+          title = '🚨 Report Submitted';
+          message = `Your ${type} report is pending dispatch.`;
+          severity = 'high';
+        } else if (status === 'EN-ROUTE' || status === 'EN ROUTE') {
+          title = '🚑 Help is on the way';
+          message = `A unit has been dispatched for your ${type} emergency.`;
+          severity = 'high';
+        } else if (status === 'RESOLVED') {
+          title = '✅ Emergency Completed';
+          message = `Your ${type} incident has been resolved.`;
+          severity = 'low';
+        } else if (status === 'FALSE_ALARM') {
+          title = '❌ Report Flagged';
+          message = `Your recent ${type} report was marked as a false alarm.`;
+          severity = 'medium';
+        }
+
+        if (title) {
+          userEmergencies.push({
+            id: doc.id,
+            type: 'system',
+            title,
+            message,
+            severity,
+            time: data.createdAt ? new Date(data.createdAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now',
+            timestamp: data.createdAt?.toMillis() || Date.now()
+          });
+        }
+      });
+      
+      userEmergencies.sort((a, b) => b.timestamp - a.timestamp);
+      setLiveAlerts(userEmergencies);
+    });
+
+    return () => unsubscribe();
+  }, [userId]);
+
+  // Static alerts for the rotating banner
+  const staticAlerts = [
     {
-      id: 1,
+      id: 'static-1',
       type: 'weather',
       title: '🌧 GMet Heavy Rain Alert',
       message: 'Flash flood warnings in Accra Central and Circle until 8 PM.',
@@ -41,7 +100,7 @@ const EmergencyHomePage = () => {
       time: '1 hour ago'
     },
     {
-      id: 2,
+      id: 'static-2',
       type: 'traffic',
       title: '🚧 Road Closure Notice',
       message: 'Major accident on the N1 Highway near Dzorwulu. Expect severe delays.',
@@ -49,24 +108,44 @@ const EmergencyHomePage = () => {
       time: '15 mins ago'
     },
     {
-      id: 3,
+      id: 'static-3',
       type: 'utility',
       title: '⚡ ECG Emergency Outage',
       message: 'Unplanned grid maintenance affecting Madina and East Legon.',
       severity: 'low',
       time: '3 hours ago'
+    },
+    {
+      id: 'static-4',
+      type: 'utility',
+      title: '💧 GWCL Service Interruption',
+      message: 'Water supply suspended in Tema and Spintex for emergency pipe repairs.',
+      severity: 'medium',
+      time: '4 hours ago'
+    },
+    {
+      id: 'static-5',
+      type: 'security',
+      title: '🛡️ Police Advisory',
+      message: 'Increased security checkpoints along the Accra-Tema Motorway tonight.',
+      severity: 'low',
+      time: '5 hours ago'
     }
   ];
+  
+  // Combine both for the notification dropdown bell
+  const displayAlerts = [...liveAlerts, ...staticAlerts];
 
   const [currentAlertIndex, setCurrentAlertIndex] = useState(0);
 
-  // Rotate alerts every 5 seconds
+  // ROTATE ONLY THE STATIC ALERTS IN THE BANNER
   useEffect(() => {
+    if (staticAlerts.length === 0) return;
     const interval = setInterval(() => {
-      setCurrentAlertIndex((prev) => (prev + 1) % activeAlerts.length);
+      setCurrentAlertIndex((prev) => (prev + 1) % staticAlerts.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [activeAlerts.length]);
+  }, [staticAlerts.length]);
 
   const [recentActivity, setRecentActivity] = useState([
     {
@@ -90,7 +169,6 @@ const EmergencyHomePage = () => {
     { id: 'other', name: 'Other', icon: Plus, color: 'bg-gray-500', description: 'Other emergencies' }
   ];
 
-  // INTERACTIVE QUICK ACTIONS
   const handleShareLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -99,18 +177,13 @@ const EmergencyHomePage = () => {
           const mapLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
           const shareText = `EMERGENCY: This is my current exact location. Please check on me: ${mapLink}`;
 
-          // If on mobile, open native sharing (WhatsApp, SMS, etc)
           if (navigator.share) {
             try {
-              await navigator.share({
-                title: 'My Emergency Location',
-                text: shareText,
-              });
+              await navigator.share({ title: 'My Emergency Location', text: shareText });
             } catch (err) {
               console.log('Share cancelled');
             }
           } else {
-            // Fallback for desktop
             navigator.clipboard.writeText(shareText);
             alert('Live GPS Link copied to clipboard! Paste it to your contacts.');
           }
@@ -125,10 +198,7 @@ const EmergencyHomePage = () => {
   const handleSafetyCheck = () => {
     const confirmCheck = window.confirm("Do you want to broadcast an 'I am Safe' status to all your saved Emergency Contacts?");
     if (confirmCheck) {
-      // Simulate network request
-      setTimeout(() => {
-        alert("✅ Safety Check-in successful! Your contacts have been notified.");
-      }, 800);
+      setTimeout(() => alert("✅ Safety Check-in successful! Your contacts have been notified."), 800);
     }
   };
 
@@ -170,7 +240,8 @@ const EmergencyHomePage = () => {
     navigate('/report', { state: { prefilledType: category.id } });
   };
 
-  const currentAlert = activeAlerts[currentAlertIndex];
+  // BANNER USES ONLY STATIC ALERTS
+  const currentAlert = staticAlerts[currentAlertIndex] || staticAlerts[0];
 
   return (
     <MainLayout>
@@ -178,45 +249,64 @@ const EmergencyHomePage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3">
             
-          
             <div className="flex items-center">
                <img src={logo} alt="RescueGH Logo" className="h-20 md:h-24 w-auto drop-shadow-sm transition-all" />
             </div>
             
-        
             <div className="flex items-center space-x-6">
               
-           
               <div className="relative">
                 <button 
                   onClick={() => setShowNotifications(!showNotifications)}
                   className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
                 >
                   <Bell className="w-8 h-8 text-gray-700" />
-                  <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 border-2 border-white text-[10px] font-bold text-white">
-                    {activeAlerts.length}
-                  </span>
+                  {displayAlerts.length > 0 && (
+                    <span className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 border-2 border-white text-[10px] font-bold text-white">
+                      {displayAlerts.length}
+                    </span>
+                  )}
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-4">
-                    <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 flex flex-col z-50 animate-in fade-in slide-in-from-top-4 overflow-hidden">
+                    
+                    {/* Pinned Header */}
+                    <div className="px-4 py-3 border-b border-gray-100 bg-white z-10">
                       <h3 className="font-bold text-gray-900">Notifications</h3>
                     </div>
-                    {activeAlerts.map(alert => (
-                      <div key={alert.id} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer">
-                        <p className="text-sm font-bold text-gray-800 truncate">{alert.title}</p>
-                        <p className="text-xs text-gray-500 mt-1 truncate">{alert.message}</p>
-                      </div>
-                    ))}
-                    <div className="px-4 py-2 text-center">
-                      <button className="text-xs font-bold text-blue-600 hover:text-blue-800">View All</button>
+                    
+                    {/* Scrollable List Container (Uses combined displayAlerts) */}
+                    <div className="max-h-[60vh] overflow-y-auto overscroll-contain">
+                      {displayAlerts.length > 0 ? (
+                        displayAlerts.map(alert => (
+                          <div 
+                            key={alert.id} 
+                            onClick={() => alert.type === 'system' && navigate(`/tracker/${alert.id}`)}
+                            className={`px-4 py-3 hover:bg-gray-50 border-b border-gray-50 cursor-pointer transition-colors ${alert.type === 'system' ? 'bg-blue-50/20 hover:bg-blue-50/40' : ''}`}
+                          >
+                            <p className="text-sm font-bold text-gray-800 line-clamp-1">{alert.title}</p>
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{alert.message}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-8 text-center text-sm text-gray-500">
+                          No new notifications
+                        </div>
+                      )}
                     </div>
+
+                    {/* Pinned Footer */}
+                    <div className="px-4 py-3 text-center border-t border-gray-100 bg-white bg-opacity-95 backdrop-blur-sm z-10">
+                      <button className="text-xs font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider">
+                        View All Activity
+                      </button>
+                    </div>
+                    
                   </div>
                 )}
               </div>
 
-              {/* Prominent Profile Avatar Button */}
               <button 
                 onClick={() => navigate('/profile')}
                 className="flex items-center justify-center w-14 h-14 bg-blue-50 rounded-full hover:bg-blue-100 transition-all border-2 border-blue-200 hover:border-blue-400 shadow-sm"
@@ -231,35 +321,36 @@ const EmergencyHomePage = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Personalized Greeting */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Stay Safe, {userName}</h1>
           <p className="text-gray-600 text-lg mt-1">Your emergency dashboard is active and monitoring.</p>
         </div>
 
-        {/* ROTATING LIVE ALERTS */}
-        <div className="mb-8 h-28 relative">
-          <div key={currentAlert.id} className={`absolute w-full rounded-xl border-l-4 p-5 shadow-sm transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 ${
-            currentAlert.severity === 'high' ? 'bg-red-50 border-red-500' :
-            currentAlert.severity === 'medium' ? 'bg-yellow-50 border-yellow-500' :
-            'bg-blue-50 border-blue-500'
-          }`}>
-            <div className="flex items-start justify-between">
-              <div className="flex items-start">
-                <AlertCircle className={`w-6 h-6 mt-0.5 mr-4 shrink-0 ${
-                  currentAlert.severity === 'high' ? 'text-red-600' :
-                  currentAlert.severity === 'medium' ? 'text-yellow-600' :
-                  'text-blue-600'
-                }`} />
-                <div>
-                  <h3 className="font-bold text-gray-900 text-lg">{currentAlert.title}</h3>
-                  <p className="text-gray-700 mt-1 line-clamp-1">{currentAlert.message}</p>
-                  <p className="text-gray-500 text-xs mt-2 font-medium uppercase tracking-wider">{currentAlert.time}</p>
+        {/* ROTATING LIVE ALERTS (Uses only staticAlerts) */}
+        {currentAlert && (
+          <div className="mb-8 h-28 relative">
+            <div key={currentAlert.id} className={`absolute w-full rounded-xl border-l-4 p-5 shadow-sm transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 ${
+              currentAlert.severity === 'high' ? 'bg-red-50 border-red-500' :
+              currentAlert.severity === 'medium' ? 'bg-yellow-50 border-yellow-500' :
+              'bg-blue-50 border-blue-500'
+            }`}>
+              <div className="flex items-start justify-between">
+                <div className="flex items-start">
+                  <AlertCircle className={`w-6 h-6 mt-0.5 mr-4 shrink-0 ${
+                    currentAlert.severity === 'high' ? 'text-red-600' :
+                    currentAlert.severity === 'medium' ? 'text-yellow-600' :
+                    'text-blue-600'
+                  }`} />
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg">{currentAlert.title}</h3>
+                    <p className="text-gray-700 mt-1 line-clamp-1">{currentAlert.message}</p>
+                    <p className="text-gray-500 text-xs mt-2 font-medium uppercase tracking-wider">{currentAlert.time}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* SOS Button Section */}
         <div className="mb-12">
@@ -342,7 +433,6 @@ const EmergencyHomePage = () => {
 
         {/* Bottom Grid for Resources & Activity */}
         <div className="grid md:grid-cols-2 gap-8 mb-8">
-          {/* Recent Activity */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <h3 className="font-bold text-gray-900 p-5 bg-gray-50/50 border-b border-gray-100 flex items-center text-lg">
               <Activity className="w-6 h-6 mr-3 text-blue-600" />
@@ -377,7 +467,6 @@ const EmergencyHomePage = () => {
             )}
           </div>
 
-          {/* Safety Resources */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="font-bold text-gray-900 mb-5 flex items-center text-lg">
               <MapPin className="w-6 h-6 mr-3 text-red-500" />

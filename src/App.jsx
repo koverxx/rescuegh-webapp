@@ -13,6 +13,13 @@ import NotFound from './pages/NotFound';
 import DispatchDashboard from './pages/Admin/DispatchDashboard';
 import AdminMap from './pages/Admin/AdminMap';
 import ActiveIncidents from './pages/Admin/ActiveIncidents';
+import FleetAndUnits from './pages/Admin/fleet&units';
+import CitizenRecords from './pages/Admin/CitizenRecords';
+import SystemReports from './pages/Admin/SystemReports'; 
+import AdminLogin from './pages/Admin/AdminLogin';
+import DispatchSignup from './pages/Admin/DispatchSignup'; 
+import ResolvedIncidents from './pages/Admin/ResolvedIncidents';
+import SystemSettings from './pages/Admin/SystemSettings';
 
 function App() {
   return (
@@ -34,6 +41,13 @@ function App() {
         <Route path="/dashboard/*" element={<DispatchDashboard />} />
         <Route path="/adminmap" element={<AdminMap />} />
         <Route path="/active-incidents" element={<ActiveIncidents />} />
+        <Route path="/fleet" element={<FleetAndUnits />} />
+        <Route path="/records" element={<CitizenRecords />} />
+        <Route path="/reports" element={<SystemReports />} /> 
+        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/dispatch-signup" element={<DispatchSignup />} />
+        <Route path="/resolved-incidents" element={<ResolvedIncidents />} />
+        <Route path="/system-settings" element={<SystemSettings />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

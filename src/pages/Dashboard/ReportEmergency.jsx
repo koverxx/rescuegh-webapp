@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Heart, Flame, Shield, Car, AlertTriangle, Plus, MapPin, Phone, User, FileText, Send, Crosshair } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom'; // <--- MAGIC WIRING 1: Added useLocation
+import { Heart, Flame, Shield, Car, AlertTriangle, Plus, MapPin, Phone, User, FileText, Send, Crosshair, ArrowLeft, Camera, ImagePlus } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom'; 
 import MainLayout from '../../Layouts/MainLayout';
-import { db, auth } from '../../firebase'; 
+import { db, auth, storage } from '../../firebase'; 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+// MAGIC WIRING: Fixed the Firebase Storage imports!
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
 
 const ReportEmergencyPage = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // <--- MAGIC WIRING 2: Initialized the location hook
+  const location = useLocation(); 
 
-  // MAGIC WIRING 3: The form now checks if the router handed it any pre-filled data!
   const [formData, setFormData] = useState({
     emergencyType: location.state?.prefilledType || '',
     priority: location.state?.prefilledPriority || '',
@@ -25,6 +26,7 @@ const ReportEmergencyPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isFetchingGPS, setIsFetchingGPS] = useState(false); 
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const emergencyTypes = [
     { id: 'medical', label: 'Medical', description: 'Health emergencies', color: 'bg-red-500', icon: Heart },
@@ -44,10 +46,7 @@ const ReportEmergencyPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const getLocation = () => {
@@ -71,11 +70,16 @@ const ReportEmergencyPage = () => {
     );
   };
 
+  const handleImageChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedImage(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault(); 
-
     if (!formData.emergencyType || !formData.priority || !formData.location || !formData.description) {
-      alert("Please complete all required fields (Type, Priority, Location, Description).");
+      alert("Please complete all required fields.");
       return;
     }
 
@@ -83,39 +87,36 @@ const ReportEmergencyPage = () => {
 
     try {
       const currentUser = auth.currentUser;
-      if (!currentUser) {
-        alert("You must be logged in to report an emergency.");
-        setIsSubmitting(false);
-        return;
+      
+      // --- 1. CONVERT IMAGE TO BASE64 (No Storage Bucket required!) ---
+      let base64Image = null;
+      if (selectedImage) {
+        base64Image = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedImage);
+          reader.onloadend = () => resolve(reader.result);
+        });
       }
 
-      const docRef = await addDoc(collection(db, 'emergencies'), {
-        reporterId: currentUser.uid,
+      // --- 2. SAVE TO FIRESTORE ---
+      await addDoc(collection(db, 'emergencies'), {
+        reporterId: currentUser?.uid || "anonymous",
         emergencyType: formData.emergencyType,
         priorityLevel: formData.priority,
         location: formData.location, 
         description: formData.description,
-        injuries: formData.injuries || "None reported",
-        reporterName: formData.reporterName || "Anonymous",
-        reporterPhone: formData.reporterPhone || "Not provided",
-        reporterEmail: formData.reporterEmail || "Not provided",
-        additionalInfo: formData.additionalInfo || "",
+        imageUrl: base64Image, // <--- SAVING THE IMAGE AS TEXT!
         status: "Pending",
         createdAt: serverTimestamp()
       });
 
-      console.log('Real Emergency Logged with ID:', docRef.id);
-
       setIsSubmitting(false);
       setIsSubmitted(true);
-
-      setTimeout(() => {
-        navigate(`/tracker/${docRef.id}`);
-      }, 2000);
+      setTimeout(() => navigate(`/tracker`), 2000);
 
     } catch (error) {
-      console.error("Error submitting report:", error);
-      alert("Failed to submit report. Please check your connection.");
+      console.error("Submission error:", error);
+      alert("Error submitting. Please check console.");
       setIsSubmitting(false);
     }
   };
@@ -142,6 +143,14 @@ const ReportEmergencyPage = () => {
     <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
         
+        {/* --- BACK BUTTON --- */}
+    <button 
+     onClick={() => navigate('/home')} 
+     className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-white hover:shadow-sm transition-all mb-6 w-fit cursor-pointer"
+    >
+    <ArrowLeft size={16} />
+     Back to Home
+    </button>
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-gray-800 mb-2">Report Emergency</h1>
@@ -298,6 +307,63 @@ const ReportEmergencyPage = () => {
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mt-4"
             />
           </div>
+
+          {/* Media / Evidence (Optional) */}
+<div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-6">
+  <div className="flex items-center gap-2 mb-4">
+    <Camera className="text-slate-500" size={20} />
+    <h3 className="font-bold text-slate-800">Add Emergency Image (Optional)</h3>
+  </div>
+  
+  <div className="mt-2 flex justify-center rounded-lg border-2 border-dashed border-slate-300 px-6 py-10 hover:bg-slate-50 transition-colors">
+    <div className="text-center">
+      {selectedImage ? (
+        <div className="flex flex-col items-center animate-in fade-in">
+          <div className="w-16 h-16 mb-3 rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+            {/* Show a tiny preview of the image */}
+            <img 
+              src={URL.createObjectURL(selectedImage)} 
+              alt="Preview" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <span className="text-sm text-emerald-600 font-bold mb-2">
+            Image Attached: {selectedImage.name}
+          </span>
+          <button 
+            type="button" 
+            onClick={() => setSelectedImage(null)} 
+            className="text-xs font-semibold text-red-500 hover:text-red-700 hover:underline"
+          >
+            Remove Image
+          </button>
+        </div>
+      ) : (
+        <>
+          <ImagePlus className="mx-auto h-12 w-12 text-slate-300" strokeWidth={1.5} />
+          <div className="mt-4 flex text-sm leading-6 text-slate-600 justify-center">
+            <label
+              htmlFor="file-upload"
+              className="relative cursor-pointer rounded-md font-bold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 hover:text-blue-500"
+            >
+              <span>Upload a photo</span>
+              <input 
+                id="file-upload" 
+                name="file-upload" 
+                type="file" 
+                className="sr-only" 
+                accept="image/*" 
+                onChange={handleImageChange} 
+              />
+            </label>
+            <p className="pl-1 font-medium">or drag and drop</p>
+          </div>
+          <p className="text-xs font-medium leading-5 text-slate-400 mt-1">PNG, JPG, or GIF up to 10MB</p>
+        </>
+      )}
+    </div>
+  </div>
+</div>
 
           {/* Additional Information */}
           <div className="bg-white p-6 rounded-lg shadow-sm">

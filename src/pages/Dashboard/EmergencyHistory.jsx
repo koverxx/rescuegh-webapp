@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, MapPin, Clock, AlertTriangle, 
-  CheckCircle, XCircle, Filter, Search, Activity, ArrowRight 
+  CheckCircle, XCircle, Filter, Search, Activity, ArrowRight, ArrowLeft
 } from 'lucide-react';
 import MainLayout from '../../Layouts/MainLayout';
 
@@ -125,6 +125,13 @@ const EmergencyHistory = () => {
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
+        <button 
+         onClick={() => navigate('/home')} 
+         className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-white hover:shadow-sm transition-all mb-6 w-fit cursor-pointer"
+        >
+        <ArrowLeft size={16} />
+          Back to Home
+        </button>
         <div className="mb-8">
           <h1 className="text-6xl font-bold text-gray-900 mb-2">Emergency History</h1>
           <p className="text-gray-600">Track and review past emergency incidents and responses</p>

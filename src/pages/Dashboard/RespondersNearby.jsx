@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../Layouts/MainLayout';
 import { 
   MapPin, Navigation, Phone, Radio, Clock, User, Truck,
   Activity, Shield, Heart, Flame, Search, Filter,
-  UserCheck, AlertCircle, CheckCircle, XCircle, Battery, Signal, Route, Crosshair
+  UserCheck, AlertCircle, CheckCircle, XCircle, Battery, Signal, Route, Crosshair, ArrowLeft
 } from 'lucide-react';
 
 const RespondersNearby = () => {
@@ -187,9 +188,18 @@ const RespondersNearby = () => {
   const responderTypes = [...new Set(liveResponders.map(r => r.type))];
   const availableCount = liveResponders.filter(r => r.status === 'available').length;
 
+  const navigate = useNavigate();
+
   return (
     <MainLayout>
     <div className="min-h-screen">
+          <button 
+            onClick={() => navigate('/home')} 
+            className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-white hover:shadow-sm transition-all mb-6 w-fit cursor-pointer"
+          >
+          <ArrowLeft size={16} />
+             Back to Home
+          </button>
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

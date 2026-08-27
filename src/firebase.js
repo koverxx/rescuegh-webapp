@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 // You will get these exact keys from the Firebase Console when you create a project
 const firebaseConfig = {
@@ -20,3 +21,4 @@ const app = initializeApp(firebaseConfig);
 // Export the specific services we need for your pages
 export const auth = getAuth(app);         // For Login.jsx / Signup.jsx
 export const db = getFirestore(app);      // For ReportEmergency.jsx
+export const storage = getStorage(app);

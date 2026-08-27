@@ -1,154 +1,169 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { db } from '../firebase'; // Make sure this path is correct
+import { collection, onSnapshot } from 'firebase/firestore';
 import { 
-  LayoutDashboard, AlertOctagon, Map, Radio, Users, 
-  Settings, Bell, Search, Menu, X 
+  LayoutDashboard, 
+  AlertCircle, 
+  Map, 
+  Radio, 
+  Users, 
+  Settings, 
+  BarChart3,
+  CheckCircle,
+  Bell,
+  BellOff,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 
 const AdminLayout = ({ children }) => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [globalAlert, setGlobalAlert] = useState(null);
 
-  // Live clock
+  // Reliable free-to-use notification chime from Mixkit
+  const alertSound = useRef(new Audio('/alert.mp3'));
+
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    let isInitialLoad = true;
+    const emergenciesQuery = collection(db, 'emergencies');
 
-  // Check if link is active
+    const unsubscribe = onSnapshot(emergenciesQuery, (snapshot) => {
+      // 1. Skip the initial data load so it doesn't play for old incidents
+      if (isInitialLoad) {
+        isInitialLoad = false;
+        return;
+      }
+
+      // 2. Check if any NEW documents were added
+      const newIncidents = snapshot.docChanges().filter(change => change.type === 'added');
+
+      if (newIncidents.length > 0) {
+        // 3. Play the audio if sound is enabled
+        if (soundEnabled) {
+          alertSound.current.currentTime = 0; // Reset audio to start
+          alertSound.current.play().catch(err => {
+            console.log("Browser blocked autoplay. User must interact with DOM first.", err);
+          });
+        }
+
+        // 4. Show the global visual alert toast
+        setGlobalAlert(`🚨 ${newIncidents.length} New Emergency Request(s) Incoming!`);
+        
+        // Auto-hide the visual toast after 5 seconds
+        setTimeout(() => {
+          setGlobalAlert(null);
+        }, 5000);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [soundEnabled]);
+
   const isActive = (path) => location.pathname === path;
 
-  // The Sidebar Navigation Links
-  const navLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Active Incidents', path: '/active-incidents', icon: AlertOctagon },
-    { name: 'Live Map', path: '/adminmap', icon: Map },
-    { name: 'Fleet & Units', path: '/fleet', icon: Radio },
-    { name: 'Citizen Records', path: '/records', icon: Users },
+  const navItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+    { name: 'Active Incidents', path: '/active-incidents', icon: <AlertCircle size={20} /> },
+    { name: 'Resolved Incidents', path: '/resolved-incidents', icon: <CheckCircle size={20} /> },
+    { name: 'Live Map', path: '/adminmap', icon: <Map size={20} /> },
+    { name: 'Fleet & Units', path: '/fleet', icon: <Radio size={20} /> },
+    { name: 'Citizen Records', path: '/records', icon: <Users size={20} /> },
+    { name: 'System Reports', path: '/reports', icon: <BarChart3 size={20} /> },
   ];
 
-  const SidebarContent = () => (
-    <>
-      <div className="h-20 flex items-center px-6 border-b border-gray-800 bg-gray-950 shrink-0">
-        <AlertOctagon className="w-8 h-8 text-red-500 mr-3" />
-        <div>
-          <h1 className="text-xl font-black tracking-wider text-white">RESCUE<span className="text-red-500">GH</span></h1>
-          <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Dispatch Center</p>
-        </div>
-        {/* Mobile Close Button */}
-        <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden ml-auto text-gray-400 hover:text-white">
-          <X className="w-6 h-6" />
-        </button>
-      </div>
-      
-      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-        {navLinks.map((link) => {
-          const Icon = link.icon;
-          return (
-            <button 
-              key={link.name}
-              onClick={() => { navigate(link.path); setIsMobileMenuOpen(false); }}
-              className={`w-full flex items-center px-4 py-3 rounded-xl font-bold transition-all ${
-                isActive(link.path) 
-                  ? 'bg-blue-600 text-white shadow-md' 
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-              }`}
-            >
-              <Icon className="w-5 h-5 mr-3" /> {link.name}
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className="p-4 border-t border-gray-800 bg-gray-950 shrink-0">
-        <button 
-          onClick={() => { navigate('/dispatch/settings'); setIsMobileMenuOpen(false); }}
-          className={`w-full flex items-center px-4 py-3 rounded-xl font-bold transition-all ${
-            isActive('/dispatch/settings') 
-              ? 'bg-blue-600 text-white shadow-md' 
-              : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-          }`}
-        >
-          <Settings className="w-5 h-5 mr-3" /> System Settings
-        </button>
-      </div>
-    </>
-  );
-
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#f8fafc] overflow-hidden font-sans relative">
       
-      {/* DESKTOP SIDEBAR */}
-      <aside className="w-64 bg-gray-900 text-white flex-col hidden md:flex z-20 shadow-xl shrink-0">
-        <SidebarContent />
-      </aside>
-
-      {/* MOBILE SIDEBAR OVERLAY */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <aside className="w-64 bg-gray-900 text-white flex flex-col relative z-50 h-full shadow-2xl animate-in slide-in-from-left">
-            <SidebarContent />
-          </aside>
+      {/* Global Incident Notification Toast */}
+      {globalAlert && (
+        <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top-5 fade-in duration-300">
+          <div className="bg-red-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 border-2 border-red-400 shadow-red-500/30">
+            <AlertTriangle size={18} className="animate-pulse" />
+            <span className="font-bold text-sm tracking-wide">{globalAlert}</span>
+            <button onClick={() => setGlobalAlert(null)} className="ml-2 hover:bg-red-500 rounded-full p-1 transition-colors">
+              <X size={14} />
+            </button>
+          </div>
         </div>
       )}
 
-      {/* MAIN CONTENT WRAPPER */}
-      <main className="flex-1 flex flex-col h-screen relative overflow-hidden">
+      {/* Sidebar */}
+      <aside className="w-64 bg-[#0f172a] text-slate-300 flex flex-col justify-between shrink-0 z-40 relative shadow-xl">
         
-        {/* TOP HEADER */}
-        <header className="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 z-10 shadow-sm shrink-0">
-          <div className="flex items-center">
-            {/* Mobile Menu Toggle */}
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg mr-3"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <div className="relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input 
-                type="text" 
-                placeholder="Search ID, Location, or Unit..." 
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-64 lg:w-80 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-4 sm:space-x-6">
-            <div className="text-right hidden lg:block">
-              <p className="text-sm font-bold text-gray-900">{currentTime.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-              <p className="text-xs text-red-600 font-bold font-mono">
-                {currentTime.toLocaleTimeString('en-GB', { hour12: false })} (GMT)
-              </p>
-            </div>
-            
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
-              <Bell className="w-6 h-6" />
-            </button>
-            
-            <div className="flex items-center border-l border-gray-200 pl-4 sm:pl-6 cursor-pointer hover:opacity-80 transition-opacity">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center border border-blue-200 shrink-0">
-                <span className="text-blue-700 font-bold">OP</span>
+        <div>
+          {/* Logo Area */}
+          <div className="h-20 flex items-center px-6 border-b border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-rose-600 rounded-lg flex items-center justify-center transform rotate-45 shadow-lg shadow-rose-500/20">
+                <div className="transform -rotate-45 text-white font-bold text-lg">!</div>
               </div>
-              <div className="ml-3 hidden md:block text-left">
-                <p className="text-sm font-bold text-gray-900">Operator 04</p>
-                <p className="text-xs text-green-600 font-bold flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span> Active Shift
-                </p>
+              <div className="flex flex-col">
+                <span className="text-white font-black tracking-wide text-lg leading-tight">RESCUEGH</span>
+                <span className="text-[10px] text-slate-400 font-bold tracking-widest leading-none">DISPATCH CENTER</span>
               </div>
             </div>
           </div>
-        </header>
 
-        {/* THIS IS WHERE THE PAGES RENDER */}
-        <div className="flex-1 overflow-auto bg-gray-50">
-          {children}
+          {/* Navigation Links */}
+          <nav className="p-4 space-y-1.5">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(item.path)
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+              >
+                {item.icon}
+                {item.name}
+              </Link>
+            ))}
+          </nav>
         </div>
+
+        {/* Bottom Section: Audio Toggle & Settings */}
+        <div className="p-4 border-t border-slate-800 space-y-1.5">
+          
+          {/* Mute/Unmute Button */}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              soundEnabled ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-500 hover:bg-slate-800/50'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {soundEnabled ? <Bell size={20} /> : <BellOff size={20} />}
+              Alert Chimes
+            </div>
+            <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">
+              {soundEnabled ? 'ON' : 'MUTED'}
+            </span>
+          </button>
+
+          <Link
+            to="/system-settings"
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+              isActive('/settings')
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            }`}
+          >
+            <Settings size={20} />
+            System Settings
+          </Link>
+        </div>
+
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-0">
+        {children}
       </main>
+
     </div>
   );
 };

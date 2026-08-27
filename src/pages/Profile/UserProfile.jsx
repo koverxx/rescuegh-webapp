@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../Layouts/MainLayout';
 import { 
   User, Phone, Heart, Activity, Shield, 
-  Save, LogOut, Plus, Trash2, CheckCircle 
+  Save, LogOut, Plus, Trash2, CheckCircle, ArrowLeft 
 } from 'lucide-react';
 
 // Firebase imports
@@ -158,8 +158,17 @@ const UserProfile = () => {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto space-y-8">
+
+          {/* --- BACK BUTTON --- */}
+        <button 
+          onClick={() => navigate('/home')} 
+          className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-700 rounded-full text-sm font-bold hover:bg-white hover:shadow-sm transition-all mb-6 w-fit cursor-pointer"
+     >
+        <ArrowLeft size={16} />
+            Back to Home
+        </button>
           
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
