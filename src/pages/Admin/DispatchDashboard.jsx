@@ -223,7 +223,7 @@ const Dashboard = () => {
                             </button>
                           )}
 
-                          <button onClick={() => navigate(`/map?incident=${incident.id}`)} className="px-2 py-1 bg-slate-900 text-white hover:bg-slate-800 text-[10px] font-bold rounded transition-colors flex items-center gap-1">
+                          <button onClick={() => navigate(`/adminmap?incident=${incident.id}`)} className="px-2 py-1 bg-slate-900 text-white hover:bg-slate-800 text-[10px] font-bold rounded transition-colors flex items-center gap-1">
                             <MapPin size={10} /> Map
                           </button>
                         </div>
