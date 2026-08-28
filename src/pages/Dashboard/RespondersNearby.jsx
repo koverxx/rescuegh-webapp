@@ -45,29 +45,23 @@ const RespondersNearby = () => {
 
     const radius = 10000;
     
-    const query = `
-      [out:json][timeout:25];
-      (
-        node["amenity"="hospital"](around:${radius},${userLat},${userLng});
-        node["amenity"="clinic"](around:${radius},${userLat},${userLng});
-        node["amenity"="police"](around:${radius},${userLat},${userLng});
-        node["amenity"="fire_station"](around:${radius},${userLat},${userLng});
-      );
-      out body;
-    `;
+    // A clean, single-line query formatted for a GET request URL
+    const query = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
 
     try {
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
+      // Switching to a GET request bypasses the strict POST CORS blocks on live domains
+      const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `data=${encodeURIComponent(query)}`
+          'Accept': 'application/json'
+        }
       });
       
-      if (!response.ok) throw new Error("Network response was not ok");
+      if (!response.ok) throw new Error(`OSM Server Error: ${response.status}`);
       
       const data = await response.json();
+      
+      if (!data || !data.elements) throw new Error("Invalid data structure returned");
 
       const formattedResults = data.elements.map(place => {
         const dist = calculateDistance(userLat, userLng, place.lat, place.lon);
@@ -85,11 +79,7 @@ const RespondersNearby = () => {
           name: facilityName,
           type: type,
           status: 'available', 
-          location: {
-            lat: place.lat,
-            lng: place.lon,
-            address: address
-          },
+          location: { lat: place.lat, lng: place.lon, address: address },
           phone: phone,
           distance: dist,
           eta: Math.ceil(dist * 3), 
@@ -106,7 +96,7 @@ const RespondersNearby = () => {
 
     } catch (error) {
       console.error("Overpass API Error:", error);
-      alert("Failed to connect to the open-source map database. Please try again.");
+      alert(`Failed to pull map data: ${error.message}. The public OSM server might be temporarily busy.`);
     } finally {
       setIsFetchingData(false);
     }
