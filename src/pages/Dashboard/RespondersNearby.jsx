@@ -129,7 +129,7 @@ const RespondersNearby = () => {
           alert("Could not access GPS. Please enable location services.");
           setIsLocating(false);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        { enableHighAccuracy: false, timeout: 30000, maximumAge: 0 }
       );
     } else {
       setIsLocating(false);
