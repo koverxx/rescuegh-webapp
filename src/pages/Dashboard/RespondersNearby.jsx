@@ -59,7 +59,10 @@ const RespondersNearby = () => {
     try {
       const response = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST',
-        body: query
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `data=${encodeURIComponent(query)}`
       });
       
       if (!response.ok) throw new Error("Network response was not ok");
@@ -125,7 +128,8 @@ const RespondersNearby = () => {
           console.error("GPS Error:", error);
           alert("Could not access GPS. Please enable location services.");
           setIsLocating(false);
-        }
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );
     } else {
       setIsLocating(false);
@@ -149,21 +153,17 @@ const RespondersNearby = () => {
     }
   };
 
-  // SMART DISPATCH ROUTER
   const handleCallUnit = (responder) => {
-    // 1. If OpenStreetMap actually has the direct number, dial it immediately!
     if (responder.phone && responder.phone !== 'N/A') {
       window.location.href = `tel:${responder.phone}`;
       return;
     }
 
-    // 2. If the number is missing, route them to Ghana's National Dispatch based on the facility type
-    let dispatchNumber = '112'; // Default general emergency
+    let dispatchNumber = '112'; 
     if (responder.type === 'Police') dispatchNumber = '191';
     else if (responder.type === 'Fire') dispatchNumber = '192';
     else if (responder.type === 'Medical') dispatchNumber = '193';
 
-    // 3. Warn the user and launch the phone dialer
     alert(`No direct line listed for ${responder.name}. Redirecting to National ${responder.type} Dispatch (${dispatchNumber}).`);
     window.location.href = `tel:${dispatchNumber}`;
   };
@@ -345,7 +345,6 @@ const RespondersNearby = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-2 md:gap-3 pt-4 border-t border-gray-100">
-                      {/* SMART FALLBACK BUTTON */}
                       <button 
                         onClick={() => handleCallUnit(responder)}
                         className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 font-bold rounded-lg hover:bg-blue-100 transition-colors text-sm w-full justify-center"
