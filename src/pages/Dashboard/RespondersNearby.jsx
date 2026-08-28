@@ -44,17 +44,16 @@ const RespondersNearby = () => {
     setLiveResponders([]); 
 
     const radius = 10000;
-    
-    // A clean, single-line query formatted for a GET request URL
     const query = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
 
     try {
-      // Switching to a GET request bypasses the strict POST CORS blocks on live domains
-      const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, {
-        method: 'GET',
+      // Bypassing Safari blocks using the French OSM server
+      const response = await fetch('https://overpass.openstreetmap.fr/api/interpreter', {
+        method: 'POST',
         headers: {
-          'Accept': 'application/json'
-        }
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `data=${encodeURIComponent(query)}`
       });
       
       if (!response.ok) throw new Error(`OSM Server Error: ${response.status}`);
@@ -96,7 +95,7 @@ const RespondersNearby = () => {
 
     } catch (error) {
       console.error("Overpass API Error:", error);
-      alert(`Failed to pull map data: ${error.message}. The public OSM server might be temporarily busy.`);
+      alert(`Failed to pull map data: ${error.message}`);
     } finally {
       setIsFetchingData(false);
     }
