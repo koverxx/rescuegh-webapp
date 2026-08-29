@@ -39,28 +39,35 @@ const RespondersNearby = () => {
     return parseFloat((R * c).toFixed(1)); 
   };
 
-  const fetchOpenStreetData = async (userLat, userLng) => {
+ const fetchOpenStreetData = async (userLat, userLng) => {
     setIsFetchingData(true);
     setLiveResponders([]); 
 
     const radius = 10000;
-    const query = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
+    
+    // We keep the query exact so it matches your local test results
+    const query = `
+      [out:json][timeout:25];
+      (
+        node["amenity"="hospital"](around:${radius},${userLat},${userLng});
+        node["amenity"="clinic"](around:${radius},${userLat},${userLng});
+        node["amenity"="police"](around:${radius},${userLat},${userLng});
+        node["amenity"="fire_station"](around:${radius},${userLat},${userLng});
+      );
+      out body;
+    `;
 
     try {
-      // Bypassing Safari blocks using the French OSM server
-      const response = await fetch('https://overpass.openstreetmap.fr/api/interpreter', {
+      // Sending the query as raw text bypasses the mobile CORS preflight block
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `data=${encodeURIComponent(query)}`
+        // Deliberately omitting headers to force a "simple request" exception in mobile browsers
+        body: query 
       });
       
       if (!response.ok) throw new Error(`OSM Server Error: ${response.status}`);
       
       const data = await response.json();
-      
-      if (!data || !data.elements) throw new Error("Invalid data structure returned");
 
       const formattedResults = data.elements.map(place => {
         const dist = calculateDistance(userLat, userLng, place.lat, place.lon);
@@ -78,15 +85,15 @@ const RespondersNearby = () => {
           name: facilityName,
           type: type,
           status: 'available', 
-          location: { lat: place.lat, lng: place.lon, address: address },
+          location: {
+            lat: place.lat,
+            lng: place.lon,
+            address: address
+          },
           phone: phone,
           distance: dist,
           eta: Math.ceil(dist * 3), 
-          crew: [{ name: 'OSM Open Data', role: 'Source', years: 'Verified' }],
-          capabilities: ['Public Facility'],
-          lastUpdate: new Date(),
-          batteryLevel: 100, 
-          signalStrength: 'excellent'
+          crew: [{ name: 'OSM Open Data', role: 'Source', years: 'Verified' }]
         };
       });
 
@@ -95,7 +102,7 @@ const RespondersNearby = () => {
 
     } catch (error) {
       console.error("Overpass API Error:", error);
-      alert(`Failed to pull map data: ${error.message}`);
+      alert("Failed to pull live map data. Please check your network connection and try again.");
     } finally {
       setIsFetchingData(false);
     }
