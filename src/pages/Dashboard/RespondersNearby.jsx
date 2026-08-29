@@ -44,30 +44,22 @@ const RespondersNearby = () => {
     setLiveResponders([]); 
 
     const radius = 10000;
-    
-    // We keep the query exact so it matches your local test results
-    const query = `
-      [out:json][timeout:25];
-      (
-        node["amenity"="hospital"](around:${radius},${userLat},${userLng});
-        node["amenity"="clinic"](around:${radius},${userLat},${userLng});
-        node["amenity"="police"](around:${radius},${userLat},${userLng});
-        node["amenity"="fire_station"](around:${radius},${userLat},${userLng});
-      );
-      out body;
-    `;
+    const query = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
 
     try {
-      // Sending the query as raw text bypasses the mobile CORS preflight block
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        // Deliberately omitting headers to force a "simple request" exception in mobile browsers
-        body: query 
-      });
+      // 1. Format the standard OSM URL
+      const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
       
-      if (!response.ok) throw new Error(`OSM Server Error: ${response.status}`);
+      // 2. Wrap it in the AllOrigins CORS proxy to force the correct security headers
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(overpassUrl)}`;
+      
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) throw new Error(`Proxy/Network Error: ${response.status}`);
       
       const data = await response.json();
+      
+      if (!data || !data.elements) throw new Error("Invalid data structure returned");
 
       const formattedResults = data.elements.map(place => {
         const dist = calculateDistance(userLat, userLng, place.lat, place.lon);
@@ -85,11 +77,7 @@ const RespondersNearby = () => {
           name: facilityName,
           type: type,
           status: 'available', 
-          location: {
-            lat: place.lat,
-            lng: place.lon,
-            address: address
-          },
+          location: { lat: place.lat, lng: place.lon, address: address },
           phone: phone,
           distance: dist,
           eta: Math.ceil(dist * 3), 
@@ -101,8 +89,8 @@ const RespondersNearby = () => {
       setLiveResponders(validResults);
 
     } catch (error) {
-      console.error("Overpass API Error:", error);
-      alert("Failed to pull live map data. Please check your network connection and try again.");
+      console.error("Fetch Error:", error);
+      alert("Failed to pull live map data via proxy. Please check your network connection and try again.");
     } finally {
       setIsFetchingData(false);
     }
