@@ -47,15 +47,17 @@ const RespondersNearby = () => {
     const query = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
 
     try {
-      // 1. Format the standard OSM URL
-      const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+      // URLSearchParams perfectly encodes the payload, forcing browsers to skip CORS preflight blocks
+      const params = new URLSearchParams();
+      params.append('data', query);
+
+      // Hitting the Overpass server directly with a strictly formatted Simple Request
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: params
+      });
       
-      // 2. Wrap it in the AllOrigins CORS proxy to force the correct security headers
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(overpassUrl)}`;
-      
-      const response = await fetch(proxyUrl);
-      
-      if (!response.ok) throw new Error(`Proxy/Network Error: ${response.status}`);
+      if (!response.ok) throw new Error(`OSM Server Error: ${response.status}`);
       
       const data = await response.json();
       
@@ -90,12 +92,12 @@ const RespondersNearby = () => {
 
     } catch (error) {
       console.error("Fetch Error:", error);
-      alert("Failed to pull live map data via proxy. Please check your network connection and try again.");
+      alert("Failed to pull live map data. Please check your network connection and try again.");
     } finally {
       setIsFetchingData(false);
     }
   };
-
+  
   const grabLiveLocation = () => {
     setIsLocating(true);
     if (navigator.geolocation) {
