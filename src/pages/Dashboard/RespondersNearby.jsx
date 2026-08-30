@@ -47,22 +47,20 @@ const RespondersNearby = () => {
     const query = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
 
     try {
-      // 1. Format the exact Overpass target URL
       const targetUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
       
-      // 2. Wrap it securely in the high-availability proxy
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
-
-      // 3. Execute the GET request
-      const response = await fetch(proxyUrl, {
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
+      // The /get endpoint safely packages the raw target data inside a 'contents' string 
+      // This entirely bypasses browser CORS because it responds as a standard webpage
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
       
-      if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+      const response = await fetch(proxyUrl);
       
-      const data = await response.json();
+      if (!response.ok) throw new Error(`Proxy Error: ${response.status}`);
+      
+      const proxyData = await response.json();
+      
+      // Unpack the JSON string delivered by the proxy back into a usable object
+      const data = JSON.parse(proxyData.contents);
       
       if (!data || !data.elements) throw new Error("Invalid data structure returned");
 
