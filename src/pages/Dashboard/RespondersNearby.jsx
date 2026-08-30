@@ -43,17 +43,26 @@ const RespondersNearby = () => {
     setIsFetchingData(true);
     setLiveResponders([]); 
 
-    const radius = 5000;
-    const query = `[out:json][timeout:10];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
-
     try {
-      // THE ULTIMATE BYPASS: A pure GET request with no custom headers.
-      // This skips the CORS Preflight check entirely and connects straight to the database.
-      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+      // 1. THE RED HERRING FIX: Prevent null coordinates from crashing the OSM server
+      if (!userLat || !userLng || isNaN(userLat) || isNaN(userLng)) {
+        throw new Error("GPS coordinates not ready. Please tap the location button again.");
+      }
+
+      const radius = 5000;
+      // 2. Force exact 6-decimal precision so the map math never fails
+      const lat = Number(userLat).toFixed(6);
+      const lng = Number(userLng).toFixed(6);
+
+      const query = `[out:json][timeout:15];(node["amenity"="hospital"](around:${radius},${lat},${lng});node["amenity"="clinic"](around:${radius},${lat},${lng});node["amenity"="police"](around:${radius},${lat},${lng});node["amenity"="fire_station"](around:${radius},${lat},${lng}););out body;`;
+
+      // 3. RAW POST REQUEST: Sending pure text prevents the browser from triggering a CORS preflight
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: query
+      });
       
-      const response = await fetch(url);
-      
-      if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+      if (!response.ok) throw new Error(`Server returned status: ${response.status}`);
       
       const data = await response.json();
       
@@ -62,7 +71,7 @@ const RespondersNearby = () => {
       }
 
       const formattedResults = data.elements.map(place => {
-        const dist = calculateDistance(userLat, userLng, place.lat, place.lon);
+        const dist = calculateDistance(lat, lng, place.lat, place.lon);
         let type = 'Medical';
         if (place.tags.amenity === 'police') type = 'Police';
         if (place.tags.amenity === 'fire_station') type = 'Fire';
