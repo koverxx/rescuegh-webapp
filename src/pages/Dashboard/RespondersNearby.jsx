@@ -47,17 +47,20 @@ const RespondersNearby = () => {
     const query = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
 
     try {
-      // URLSearchParams perfectly encodes the payload, forcing browsers to skip CORS preflight blocks
-      const params = new URLSearchParams();
-      params.append('data', query);
+      // 1. Format the exact Overpass target URL
+      const targetUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+      
+      // 2. Wrap it securely in the high-availability proxy
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
 
-      // Hitting the Overpass server directly with a strictly formatted Simple Request
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        body: params
+      // 3. Execute the GET request
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'Accept': 'application/json'
+        }
       });
       
-      if (!response.ok) throw new Error(`OSM Server Error: ${response.status}`);
+      if (!response.ok) throw new Error(`Server Error: ${response.status}`);
       
       const data = await response.json();
       
@@ -65,30 +68,28 @@ const RespondersNearby = () => {
 
       const formattedResults = data.elements.map(place => {
         const dist = calculateDistance(userLat, userLng, place.lat, place.lon);
-        
         let type = 'Medical';
         if (place.tags.amenity === 'police') type = 'Police';
         if (place.tags.amenity === 'fire_station') type = 'Fire';
 
-        const facilityName = place.tags.name || `Unnamed ${type} Facility`;
-        const address = place.tags['addr:street'] || place.tags['addr:city'] || place.tags['addr:full'] || 'Address unavailable';
-        const phone = place.tags.phone || place.tags['contact:phone'] || 'N/A';
-
         return {
           id: place.id.toString().substring(0, 8), 
-          name: facilityName,
+          name: place.tags.name || `Unnamed ${type} Facility`,
           type: type,
           status: 'available', 
-          location: { lat: place.lat, lng: place.lon, address: address },
-          phone: phone,
+          location: { 
+            lat: place.lat, 
+            lng: place.lon, 
+            address: place.tags['addr:street'] || place.tags['addr:city'] || 'Address unavailable' 
+          },
+          phone: place.tags.phone || place.tags['contact:phone'] || 'N/A',
           distance: dist,
           eta: Math.ceil(dist * 3), 
           crew: [{ name: 'OSM Open Data', role: 'Source', years: 'Verified' }]
         };
-      });
+      }).filter(r => !r.name.includes('Unnamed'));
 
-      const validResults = formattedResults.filter(r => !r.name.includes('Unnamed'));
-      setLiveResponders(validResults);
+      setLiveResponders(formattedResults);
 
     } catch (error) {
       console.error("Fetch Error:", error);
@@ -97,7 +98,7 @@ const RespondersNearby = () => {
       setIsFetchingData(false);
     }
   };
-  
+
   const grabLiveLocation = () => {
     setIsLocating(true);
     if (navigator.geolocation) {
