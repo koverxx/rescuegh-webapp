@@ -43,18 +43,15 @@ const RespondersNearby = () => {
     setIsFetchingData(true);
     setLiveResponders([]); 
 
-    const radius = 5000; // Optimized 5km radius for fast coordinate processing
-    const query = `[out:json][timeout:15];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
+    const radius = 5000;
+    const query = `[out:json][timeout:10];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
 
     try {
-      // Direct, pure connection to OpenStreetMap. No third-party proxies.
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `data=${encodeURIComponent(query)}`
-      });
+      // THE ULTIMATE BYPASS: A pure GET request with no custom headers.
+      // This skips the CORS Preflight check entirely and connects straight to the database.
+      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+      
+      const response = await fetch(url);
       
       if (!response.ok) throw new Error(`Server Error: ${response.status}`);
       
