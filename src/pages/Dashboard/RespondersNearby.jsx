@@ -43,44 +43,25 @@ const RespondersNearby = () => {
     setIsFetchingData(true);
     setLiveResponders([]); 
 
-    const radius = 10000;
-    // Lowered timeout to 10s so it fails over quickly if a server hangs
-    const query = `[out:json][timeout:10];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
-
-    // High-Availability Routing: If one server blocks the request, it instantly tries the next
-    const endpoints = [
-      'https://overpass.kumi.systems/api/interpreter',     // Taiwanese server (Most relaxed CORS policies)
-      'https://overpass.openstreetmap.fr/api/interpreter', // French server fallback
-      'https://overpass-api.de/api/interpreter'            // German primary fallback
-    ];
-
-    let data = null;
-
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`Pinging OSM server: ${endpoint}`);
-        const params = new URLSearchParams();
-        params.append('data', query);
-
-        // Raw POST request with URLSearchParams natively bypasses mobile CORS preflight checks
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          body: params
-        });
-
-        if (response.ok) {
-          data = await response.json();
-          console.log(`Successfully connected to ${endpoint}`);
-          break; // Stop the loop as soon as we get a successful payload
-        }
-      } catch (e) {
-        console.warn(`Server blocked request, failing over to next node...`);
-      }
-    }
+    // Reduced to 5km (5000m) to prevent the Overpass server from timing out on the math
+    const radius = 5000;
+    const query = `[out:json][timeout:15];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
 
     try {
-      if (!data || !data.elements) {
-        throw new Error("All global map servers rejected the connection.");
+      // Format the standard GET request URL
+      const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+      
+      // CodeTabs is an ultra-reliable proxy that strips all CORS blocks without timing out
+      const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(overpassUrl)}`;
+
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) throw new Error(`Network Error: ${response.status}`);
+      
+      const data = await response.json();
+      
+      if (!data || !data.elements || data.elements.length === 0) {
+        throw new Error("No active facilities found within a 5km radius of your coordinates.");
       }
 
       const formattedResults = data.elements.map(place => {
@@ -109,7 +90,7 @@ const RespondersNearby = () => {
       setLiveResponders(formattedResults);
 
     } catch (error) {
-      console.error("Critical Mapping Error:", error);
+      console.error("Fetch Error:", error);
       alert(`Map Data Error: ${error.message}`);
     } finally {
       setIsFetchingData(false);
