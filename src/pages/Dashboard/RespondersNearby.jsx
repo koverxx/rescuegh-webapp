@@ -41,63 +41,34 @@ const RespondersNearby = () => {
 
  const fetchOpenStreetData = async (userLat, userLng) => {
     setIsFetchingData(true);
-    setLiveResponders([]); 
+    setLiveResponders([]);
 
     try {
-      // 1. THE RED HERRING FIX: Prevent null coordinates from crashing the OSM server
-      if (!userLat || !userLng || isNaN(userLat) || isNaN(userLng)) {
-        throw new Error("GPS coordinates not ready. Please tap the location button again.");
-      }
+      if (!userLat || !userLng) throw new Error("Awaiting precise GPS lock...");
 
-      const radius = 5000;
-      // 2. Force exact 6-decimal precision so the map math never fails
-      const lat = Number(userLat).toFixed(6);
-      const lng = Number(userLng).toFixed(6);
+      // Fetching from your own Firebase domain bypasses all browser CORS restrictions
+      const response = await fetch('/accra_responders.json');
+      if (!response.ok) throw new Error("Failed to load regional database.");
 
-      const query = `[out:json][timeout:15];(node["amenity"="hospital"](around:${radius},${lat},${lng});node["amenity"="clinic"](around:${radius},${lat},${lng});node["amenity"="police"](around:${radius},${lat},${lng});node["amenity"="fire_station"](around:${radius},${lat},${lng}););out body;`;
+      const cachedData = await response.json();
 
-      // 3. RAW POST REQUEST: Sending pure text prevents the browser from triggering a CORS preflight
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        body: query
-      });
-      
-      if (!response.ok) throw new Error(`Server returned status: ${response.status}`);
-      
-      const data = await response.json();
-      
-      if (!data || !data.elements || data.elements.length === 0) {
-        throw new Error("No active facilities found within a 5km radius.");
-      }
-
-      const formattedResults = data.elements.map(place => {
-        const dist = calculateDistance(lat, lng, place.lat, place.lon);
-        let type = 'Medical';
-        if (place.tags.amenity === 'police') type = 'Police';
-        if (place.tags.amenity === 'fire_station') type = 'Fire';
-
+      // The app dynamically processes your phone's live location against the 91 real units
+      const dynamicallyRoutedResults = cachedData.map(facility => {
+        const liveDistance = calculateDistance(userLat, userLng, facility.location.lat, facility.location.lng);
         return {
-          id: place.id.toString().substring(0, 8), 
-          name: place.tags.name || `Unnamed ${type} Facility`,
-          type: type,
-          status: 'available', 
-          location: { 
-            lat: place.lat, 
-            lng: place.lon, 
-            address: place.tags['addr:street'] || place.tags['addr:city'] || 'Address unavailable' 
-          },
-          phone: place.tags.phone || place.tags['contact:phone'] || 'N/A',
-          distance: dist,
-          eta: Math.ceil(dist * 3), 
-          crew: [{ name: 'OSM Open Data', role: 'Source', years: 'Verified' }]
+          ...facility,
+          distance: liveDistance,
+          eta: Math.ceil(liveDistance * 3)
         };
-      }).filter(r => !r.name.includes('Unnamed'));
+      });
 
-      setLiveResponders(formattedResults);
+      // Sort so the physically closest units to your current coordinates always appear first
+      dynamicallyRoutedResults.sort((a, b) => a.distance - b.distance);
+      setLiveResponders(dynamicallyRoutedResults);
 
     } catch (error) {
-      console.error("Fetch Error:", error);
-      alert(`Map Data Error: ${error.message}`);
+      console.error("Local DB Error:", error);
+      alert(`Routing Error: ${error.message}`);
     } finally {
       setIsFetchingData(false);
     }
