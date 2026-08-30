@@ -44,25 +44,44 @@ const RespondersNearby = () => {
     setLiveResponders([]); 
 
     const radius = 10000;
-    const query = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
+    // Lowered timeout to 10s so it fails over quickly if a server hangs
+    const query = `[out:json][timeout:10];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
+
+    // High-Availability Routing: If one server blocks the request, it instantly tries the next
+    const endpoints = [
+      'https://overpass.kumi.systems/api/interpreter',     // Taiwanese server (Most relaxed CORS policies)
+      'https://overpass.openstreetmap.fr/api/interpreter', // French server fallback
+      'https://overpass-api.de/api/interpreter'            // German primary fallback
+    ];
+
+    let data = null;
+
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`Pinging OSM server: ${endpoint}`);
+        const params = new URLSearchParams();
+        params.append('data', query);
+
+        // Raw POST request with URLSearchParams natively bypasses mobile CORS preflight checks
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: params
+        });
+
+        if (response.ok) {
+          data = await response.json();
+          console.log(`Successfully connected to ${endpoint}`);
+          break; // Stop the loop as soon as we get a successful payload
+        }
+      } catch (e) {
+        console.warn(`Server blocked request, failing over to next node...`);
+      }
+    }
 
     try {
-      const targetUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
-      
-      // The /get endpoint safely packages the raw target data inside a 'contents' string 
-      // This entirely bypasses browser CORS because it responds as a standard webpage
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-      
-      const response = await fetch(proxyUrl);
-      
-      if (!response.ok) throw new Error(`Proxy Error: ${response.status}`);
-      
-      const proxyData = await response.json();
-      
-      // Unpack the JSON string delivered by the proxy back into a usable object
-      const data = JSON.parse(proxyData.contents);
-      
-      if (!data || !data.elements) throw new Error("Invalid data structure returned");
+      if (!data || !data.elements) {
+        throw new Error("All global map servers rejected the connection.");
+      }
 
       const formattedResults = data.elements.map(place => {
         const dist = calculateDistance(userLat, userLng, place.lat, place.lon);
@@ -90,8 +109,8 @@ const RespondersNearby = () => {
       setLiveResponders(formattedResults);
 
     } catch (error) {
-      console.error("Fetch Error:", error);
-      alert("Failed to pull live map data. Please check your network connection and try again.");
+      console.error("Critical Mapping Error:", error);
+      alert(`Map Data Error: ${error.message}`);
     } finally {
       setIsFetchingData(false);
     }
