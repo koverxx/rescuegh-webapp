@@ -43,25 +43,25 @@ const RespondersNearby = () => {
     setIsFetchingData(true);
     setLiveResponders([]); 
 
-    // Reduced to 5km (5000m) to prevent the Overpass server from timing out on the math
-    const radius = 5000;
+    const radius = 5000; // Optimized 5km radius for fast coordinate processing
     const query = `[out:json][timeout:15];(node["amenity"="hospital"](around:${radius},${userLat},${userLng});node["amenity"="clinic"](around:${radius},${userLat},${userLng});node["amenity"="police"](around:${radius},${userLat},${userLng});node["amenity"="fire_station"](around:${radius},${userLat},${userLng}););out body;`;
 
     try {
-      // Format the standard GET request URL
-      const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+      // Direct, pure connection to OpenStreetMap. No third-party proxies.
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `data=${encodeURIComponent(query)}`
+      });
       
-      // CodeTabs is an ultra-reliable proxy that strips all CORS blocks without timing out
-      const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(overpassUrl)}`;
-
-      const response = await fetch(proxyUrl);
-      
-      if (!response.ok) throw new Error(`Network Error: ${response.status}`);
+      if (!response.ok) throw new Error(`Server Error: ${response.status}`);
       
       const data = await response.json();
       
       if (!data || !data.elements || data.elements.length === 0) {
-        throw new Error("No active facilities found within a 5km radius of your coordinates.");
+        throw new Error("No active facilities found within a 5km radius.");
       }
 
       const formattedResults = data.elements.map(place => {
