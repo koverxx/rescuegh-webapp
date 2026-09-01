@@ -7,6 +7,7 @@ import {
   Activity, Shield, Heart, Flame, Search, Filter,
   UserCheck, AlertCircle, CheckCircle, XCircle, Battery, Signal, Route, Crosshair, ArrowLeft
 } from 'lucide-react';
+import localMapData from './accra_responders.json';
 
 const RespondersNearby = () => {
   const routerState = useLocation();
