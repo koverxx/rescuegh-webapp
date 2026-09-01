@@ -38,22 +38,14 @@ const RespondersNearby = () => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return parseFloat((R * c).toFixed(1)); 
   };
-
- const fetchOpenStreetData = async (userLat, userLng) => {
+const fetchOpenStreetData = async (userLat, userLng) => {
     setIsFetchingData(true);
     setLiveResponders([]);
 
     try {
       if (!userLat || !userLng) throw new Error("Awaiting precise GPS lock...");
 
-      // Fetching from your own Firebase domain bypasses all browser CORS restrictions
-      const response = await fetch('/accra_responders.json');
-      if (!response.ok) throw new Error("Failed to load regional database.");
-
-      const cachedData = await response.json();
-
-      // The app dynamically processes your phone's live location against the 91 real units
-      const dynamicallyRoutedResults = cachedData.map(facility => {
+      const dynamicallyRoutedResults = localMapData.map(facility => {
         const liveDistance = calculateDistance(userLat, userLng, facility.location.lat, facility.location.lng);
         return {
           ...facility,
@@ -62,12 +54,11 @@ const RespondersNearby = () => {
         };
       });
 
-      // Sort so the physically closest units to your current coordinates always appear first
       dynamicallyRoutedResults.sort((a, b) => a.distance - b.distance);
       setLiveResponders(dynamicallyRoutedResults);
 
     } catch (error) {
-      console.error("Local DB Error:", error);
+      console.error("Data Processing Error:", error);
       alert(`Routing Error: ${error.message}`);
     } finally {
       setIsFetchingData(false);
