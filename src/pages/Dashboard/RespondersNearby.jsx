@@ -122,7 +122,7 @@ const fetchOpenStreetData = async (userLat, userLng) => {
     window.location.href = `tel:${dispatchNumber}`;
   };
 
-  const filteredResponders = liveResponders.filter(responder => {
+  const displayResponders = liveResponders.filter(facility => {
     const matchesSearch = responder.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          responder.location.address.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'all' || responder.type.toLowerCase() === selectedType.toLowerCase();
