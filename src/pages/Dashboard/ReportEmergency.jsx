@@ -112,7 +112,7 @@ const ReportEmergencyPage = () => {
 
       setIsSubmitting(false);
       setIsSubmitted(true);
-      setTimeout(() => navigate(`/tracker`), 2000);
+      setTimeout(() => navigate(`/tracker/:id`), 2000);
 
     } catch (error) {
       console.error("Submission error:", error);
