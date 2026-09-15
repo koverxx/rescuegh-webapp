@@ -49,7 +49,7 @@ function App() {
         <Route path="/dispatch-signup" element={<DispatchSignup />} />
         <Route path="/resolved-incidents" element={<ResolvedIncidents />} />
         <Route path="/system-settings" element={<SystemSettings />} />
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </Router>
   );
